@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 1181738127491952695}
   - component: {fileID: 5503319317341750849}
   - component: {fileID: 3420311457333088429}
-  - component: {fileID: 3980665466817391824}
+  - component: {fileID: 4609583663085910890}
   m_Layer: 0
   m_Name: DuckEnemy
   m_TagString: Enemy
@@ -138,7 +138,7 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
---- !u!114 &3980665466817391824
+--- !u!114 &4609583663085910890
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -147,11 +147,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 8556112603900198680}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 76887c307163fc143b4f703c171a0162, type: 3}
+  m_Script: {fileID: 11500000, guid: 169aa7a003e5c5b4b83a448ac9cd7581, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moveSpeed: 2
-  stopDistance: 1
+  spawner: {fileID: 0}
 --- !u!1001 &6576383670404664127
 PrefabInstance:
   m_ObjectHideFlags: 0
