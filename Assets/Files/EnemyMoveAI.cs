@@ -1,0 +1,138 @@
+using System.Collections;
+using UnityEngine;
+using UnityEngine.AI;
+
+[DisallowMultipleComponent]
+[RequireComponent(typeof(NavMeshAgent), typeof(Rigidbody))]
+public class EnemyMoveAI : MonoBehaviour
+{
+    [Header("Target")]
+    public Transform player;
+
+    [Header("Movement Settings")]
+    public bool moveByAgent = false;
+    public float chaseSpeed = 3.5f;
+    public float stopDistance = 1.5f;
+
+    [Header("Ground Check")]
+    public Transform groundCheck;
+    public float groundDistance = 0.2f;
+    public LayerMask groundMask;
+    public bool isGrounded = false;
+
+    [Header("Teleport/Stun Settings")]
+    [SerializeField] private float teleportHeightForce = 5f;
+    [SerializeField] private float stunDuration = 1f;
+
+    [Header("NavMesh Settings")]
+    [Tooltip("Maximum distance to snap to nearest NavMesh position after teleport.")]
+    [SerializeField] private float navMeshSnapDistance = 2f;
+
+    [Header("Components")]
+    [SerializeField] private NavMeshAgent agent;
+    [SerializeField] private Rigidbody rigidBody;
+
+
+    void Awake()
+    {
+        // Optionally allow manual assignment in Inspector
+        if (agent == null) agent = GetComponent<NavMeshAgent>();
+        if (rigidBody == null) rigidBody = GetComponent<Rigidbody>();
+    }
+
+    void Update()
+    {
+        // Ground check
+        isGrounded = Physics.CheckSphere(groundCheck.position, groundDistance, groundMask);
+
+        // Safety: stop all movement logic if not ready
+        if (player == null || !moveByAgent || agent == null)
+            return;
+
+        if (!agent.enabled || !agent.isOnNavMesh)
+            return; // Don't call isStopped or SetDestination if agent isn't valid
+
+        float distance = Vector3.Distance(transform.position, player.position);
+
+        if (distance > stopDistance)
+        {
+            agent.isStopped = false;
+            agent.speed = chaseSpeed;
+            agent.SetDestination(player.position);
+        }
+        else
+        {
+            agent.isStopped = true;
+        }
+    }
+    void OnDisable()
+    {
+        if (agent.isActiveAndEnabled)
+            agent.isStopped = true;
+    }
+
+    void OnEnable()
+    {
+        if (agent.isActiveAndEnabled)
+            agent.isStopped = false;
+    }
+
+    // --------------------------------------------------------------------
+    // TELEPORT -> Bread Frenzy: Not implemented. 
+    // --------------------------------------------------------------------
+    public void Teleport(Vector3 targetPosition)
+    {
+        StartCoroutine(TeleportResolveCoroutine(targetPosition));
+    }
+
+    private IEnumerator TeleportResolveCoroutine(Vector3 targetPosition)
+    {
+        yield return null; // Wait one frame to ensure transform sync
+
+        // Temporarily disable agent
+        agent.enabled = false;
+
+        // --- Try snap to nearest NavMesh ---
+        if (NavMesh.SamplePosition(targetPosition, out NavMeshHit hit, navMeshSnapDistance, NavMesh.AllAreas))
+        {
+            transform.position = hit.position;
+        }
+        else
+        {
+            // --- Set up physics state ---
+            rigidBody.useGravity = true;
+            rigidBody.isKinematic = false;
+            rigidBody.linearVelocity = Vector3.up * teleportHeightForce;
+
+            // Teleport
+            transform.position = targetPosition;
+            Physics.SyncTransforms();
+
+            // --- Wait for ground detection ---
+            isGrounded = false;
+            yield return new WaitForFixedUpdate();
+            yield return new WaitUntil(() => isGrounded);
+            yield return new WaitForSeconds(stunDuration);
+
+            // --- Re-enable NavMesh Agent ---
+            rigidBody.linearVelocity = Vector3.zero;
+            rigidBody.angularVelocity = Vector3.zero;
+            rigidBody.isKinematic = true;
+            rigidBody.useGravity = false;
+
+        }
+        agent.Warp(transform.position);
+        agent.enabled = true;
+    }
+
+    private void OnDrawGizmosSelected()
+    {
+        if (isActiveAndEnabled == false) return;
+        Gizmos.color = agent != null && agent.enabled ? Color.yellow : Color.red;
+        Gizmos.DrawWireSphere(transform.position, stopDistance);
+
+        // Draw snap distance radius
+        Gizmos.color = Color.cyan;
+        Gizmos.DrawWireSphere(transform.position, navMeshSnapDistance);
+    }
+}
