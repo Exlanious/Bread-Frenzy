@@ -240,7 +240,7 @@ NavMeshAgent:
   m_AutoBraking: 1
   m_AutoRepath: 1
   m_Height: 1
-  m_BaseOffset: 0.5
+  m_BaseOffset: 1
   m_WalkableMask: 4294967295
   m_ObstacleAvoidanceType: 4
 --- !u!114 &5373073756443602027
@@ -258,7 +258,7 @@ MonoBehaviour:
   player: {fileID: 0}
   moveByAgent: 0
   chaseSpeed: 3.5
-  stopDistance: 1.5
+  stopDistance: 2
   groundCheck: {fileID: 7841970345826126918}
   groundDistance: 0.2
   groundMask:
