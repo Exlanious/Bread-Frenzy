@@ -3,10 +3,10 @@ using UnityEngine;
 public class EnemyHordeSpawner : MonoBehaviour
 {
     [Header("References")]
-    public Transform center;        // Spawn center (SpawnCenter object)
+    public Transform player;        // Player transform
     public GameObject enemyPrefab;  // Your duck prefab
 
-    [Header("Spawn Area (around center)")]
+    [Header("Spawn Area (around player)")]
     public float minSpawnRadius = 8f;
     public float maxSpawnRadius = 14f;
 
@@ -24,7 +24,8 @@ public class EnemyHordeSpawner : MonoBehaviour
 
     void Update()
     {
-        if (enemyPrefab == null) return;
+        // need both a prefab and a player to do anything
+        if (enemyPrefab == null || player == null) return;
 
         elapsedTime += Time.deltaTime;
 
@@ -42,20 +43,24 @@ public class EnemyHordeSpawner : MonoBehaviour
 
     void SpawnEnemy()
     {
-        // If no center assigned, default to world origin
-        Vector3 centerPos = center != null ? center.position : Vector3.zero;
+        Vector3 playerPos = player.position;
 
         // Random direction on XZ plane
         Vector2 dir2D = Random.insideUnitCircle.normalized;
         float distance = Random.Range(minSpawnRadius, maxSpawnRadius);
 
         Vector3 offset = new Vector3(dir2D.x, 0f, dir2D.y) * distance;
-        Vector3 spawnPos = centerPos + offset;
+        Vector3 spawnPos = playerPos + offset;
 
         // Put them just above the ground so they drop nicely
-        spawnPos.y = centerPos.y + 0.5f;
+        spawnPos.y = playerPos.y + 0.5f;
 
-        GameObject enemy = Instantiate(enemyPrefab, spawnPos, Quaternion.identity);
+        // Face the player
+        Vector3 toPlayer = (playerPos - spawnPos);
+        toPlayer.y = 0f; // keep them level
+        Quaternion lookRot = Quaternion.LookRotation(toPlayer.normalized, Vector3.up);
+
+        GameObject enemy = Instantiate(enemyPrefab, spawnPos, lookRot);
         aliveEnemies++;
 
         // Optional: future-proof for when enemies can die
@@ -63,6 +68,13 @@ public class EnemyHordeSpawner : MonoBehaviour
         if (duck != null)
         {
             duck.spawner = this;
+        }
+
+        var moveAI = enemy.GetComponent<EnemyMoveAI>();
+        if (moveAI != null)
+        {
+            moveAI.player = player; // <-- this is critical
+            moveAI.moveByAgent = true; // enable NavMesh chasing
         }
     }
 

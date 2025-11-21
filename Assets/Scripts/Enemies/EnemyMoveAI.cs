@@ -35,36 +35,47 @@ public class EnemyMoveAI : MonoBehaviour
 
     void Awake()
     {
-        // Optionally allow manual assignment in Inspector
         if (agent == null) agent = GetComponent<NavMeshAgent>();
         if (rigidBody == null) rigidBody = GetComponent<Rigidbody>();
+
+        agent.stoppingDistance = 0f;          // we handle distance manually
     }
 
     void Update()
     {
         // Ground check
-        isGrounded = Physics.CheckSphere(groundCheck.position, groundDistance, groundMask);
+        if (groundCheck != null)
+        {
+            isGrounded = Physics.CheckSphere(groundCheck.position, groundDistance, groundMask);
+        }
 
         // Safety: stop all movement logic if not ready
         if (player == null || !moveByAgent || agent == null)
             return;
 
         if (!agent.enabled || !agent.isOnNavMesh)
-            return; // Don't call isStopped or SetDestination if agent isn't valid
+            return;
 
-        float distance = Vector3.Distance(transform.position, player.position);
+        // Direction to player on XZ plane
+        Vector3 toPlayer = player.position - transform.position;
+        toPlayer.y = 0f;
+        float distance = toPlayer.magnitude;
 
-        if (distance > stopDistance)
-        {
-            agent.isStopped = false;
-            agent.speed = chaseSpeed;
-            agent.SetDestination(player.position);
-        }
-        else
+        // If already within stop distance, just stop the agent
+        if (distance <= stopDistance)
         {
             agent.isStopped = true;
+            return;
         }
+
+        agent.isStopped = false;
+        agent.speed = chaseSpeed;
+
+        // Target a point at "stopDistance" away from the player
+        Vector3 targetPos = player.position - toPlayer.normalized * stopDistance;
+        agent.SetDestination(targetPos);
     }
+
     void OnDisable()
     {
         if (agent.isActiveAndEnabled)
