@@ -492,6 +492,7 @@ MonoBehaviour:
   hittableLayers:
     serializedVersion: 2
     m_Bits: 4294967295
+  playerStats: {fileID: 0}
 --- !u!114 &6498540831953964109
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -539,7 +540,8 @@ MonoBehaviour:
   currentXP: 0
   xpToNextLevel: 5
   xpGrowthFactor: 1.5
-  upgradeSelector: {fileID: 0}
+  upgradeUI: {fileID: 0}
+  xpBarUI: {fileID: 0}
 --- !u!1 &5769394161550814593
 GameObject:
   m_ObjectHideFlags: 0
@@ -629,7 +631,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0.33578193, g: 1, b: 0, a: 1}
+  m_Color: {r: 0.43529412, g: 0.9019608, b: 0.41960785, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
