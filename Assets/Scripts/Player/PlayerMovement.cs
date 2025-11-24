@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections;
 
 [RequireComponent(typeof(Rigidbody))]
 public class PlayerMovement : MonoBehaviour
@@ -17,6 +18,16 @@ public class PlayerMovement : MonoBehaviour
     public float groundDistance = 0.2f;
     public LayerMask groundMask;
 
+    [Header("Dash Settings")]
+    public KeyCode dashKey = KeyCode.LeftShift;
+    // public float dashSpeed = 15f; 
+    public float dashDistance = 4f;      // NEW: how far the dash travels
+    public float dashDuration = 0.12f;
+    public float dashCooldown = 0.4f;
+
+    private bool isDashing;
+    private bool canDash = true;
+
     private Rigidbody rb;
     private bool isGrounded;
     private Vector3 currentVelocity;
@@ -32,12 +43,25 @@ public class PlayerMovement : MonoBehaviour
     {
         HandleMovement();
         HandleJump();
+        HandleDash();
+    }
+
+    void HandleDash()
+    {
+        if (Input.GetKeyDown(dashKey) && canDash)
+        {
+            StartCoroutine(DashRoutine());
+        }
     }
 
     void HandleMovement()
     {
+
         // Ground check
         isGrounded = Physics.CheckSphere(groundCheck.position, groundDistance, groundMask);
+        
+        if (isDashing)
+            return;
 
         // Input
         float x = Input.GetAxis("Horizontal");
@@ -88,5 +112,55 @@ public class PlayerMovement : MonoBehaviour
 
             rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
         }
+    }
+
+    IEnumerator DashRoutine()
+    {
+        canDash = false;
+        isDashing = true;
+
+        // Direction = where the player is facing, horizontal only
+        Vector3 dashDir = transform.forward;
+        dashDir.y = 0f;
+        dashDir.Normalize();
+
+        float elapsed = 0f;
+
+        Vector3 startPos = rb.position;
+        Vector3 targetPos = startPos + dashDir * dashDistance;
+
+        // Optional: reduce drag during dash so it feels clean
+        float originalDrag = rb.linearDamping;
+        rb.linearDamping = 0f;
+
+        while (elapsed < dashDuration)
+        {
+            float t = elapsed / dashDuration;
+
+            // Smooth ease (fast at start, slow at end)
+            float eased = Mathf.SmoothStep(0f, 1f, t);
+
+            Vector3 newPos = Vector3.Lerp(startPos, targetPos, eased);
+
+            // Keep current vertical position (so jump / gravity still work)
+            newPos.y = rb.position.y;
+
+            rb.MovePosition(newPos);
+
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+
+        // Snap to final target to avoid tiny drift
+        Vector3 finalPos = targetPos;
+        finalPos.y = rb.position.y;
+        rb.MovePosition(finalPos);
+
+        rb.linearDamping = originalDrag;
+
+        isDashing = false;
+
+        yield return new WaitForSeconds(dashCooldown);
+        canDash = true;
     }
 }

@@ -170,10 +170,10 @@ Rigidbody:
     m_Bits: 0
   m_ImplicitCom: 1
   m_ImplicitTensor: 1
-  m_UseGravity: 0
-  m_IsKinematic: 1
+  m_UseGravity: 1
+  m_IsKinematic: 0
   m_Interpolate: 0
-  m_Constraints: 0
+  m_Constraints: 80
   m_CollisionDetection: 0
 --- !u!114 &4609583663085910890
 MonoBehaviour:
@@ -218,9 +218,52 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   maxHealth: 2
   healthBar: {fileID: 3098526267212582202}
-  hideWhenFull: 0
+  hideWhenFull: 1
   destroyOnDeath: 1
   destroyDelay: 0.5
+  enableHitFlash: 1
+  meshRenderer: {fileID: 2785190528231721617}
+  hitColor: {r: 1, g: 0, b: 0, a: 1}
+  flashDuration: 0.08
+  enableHitStun: 1
+  hitStunTime: 0.1
+  enableKnockback: 1
+  knockbackDistance: 2.8
+  knockbackDuration: 0.23
+  verticalBump: 0.35
+  knockbackCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.3492607
+      value: 0.69958884
+      inSlope: 1.4760082
+      outSlope: 1.4760082
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
 --- !u!195 &48614817306735290
 NavMeshAgent:
   m_ObjectHideFlags: 0
@@ -495,5 +538,10 @@ PrefabInstance:
 --- !u!4 &1129671337374824157 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 6118531530593467874, guid: a34cb8bf9e395fb4ea477a5f6c59e07a, type: 3}
+  m_PrefabInstance: {fileID: 6576383670404664127}
+  m_PrefabAsset: {fileID: 0}
+--- !u!137 &2785190528231721617 stripped
+SkinnedMeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 9071092002236301742, guid: a34cb8bf9e395fb4ea477a5f6c59e07a, type: 3}
   m_PrefabInstance: {fileID: 6576383670404664127}
   m_PrefabAsset: {fileID: 0}

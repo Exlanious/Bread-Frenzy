@@ -73,7 +73,6 @@ public class PlayerAttack : MonoBehaviour
         yield return new WaitForSeconds(attackCooldown);
         canAttack = true;
     }
-
     private void OnHitboxTriggerEnter(Collider other)
     {
         if (!isAttacking) return;
@@ -82,19 +81,15 @@ public class PlayerAttack : MonoBehaviour
         // Layer filter
         if (((1 << other.gameObject.layer) & hittableLayers) == 0) return;
 
-        // Apply knockback
-        Rigidbody otherRb = other.attachedRigidbody;
-        if (otherRb != null)
-        {
-            Vector3 dir = (other.transform.position - transform.position).normalized;
-            dir.y += upwardBias;
-            dir.Normalize();
-            otherRb.AddForce(dir * knockbackForce, ForceMode.Impulse);
-        }
+        // Direction from player to enemy
+        Vector3 dir = (other.transform.position - transform.position);
+        dir.y = 0f; // flatten so it's horizontal
+        dir = dir.normalized;
 
-        // Apply damage
         EnemyHealth enemyHealth = other.GetComponent<EnemyHealth>();
         if (enemyHealth != null)
-            enemyHealth.TakeDamage(1);
+        {
+            enemyHealth.TakeDamage(1, dir);   // use new overload with direction
+        }
     }
 }
