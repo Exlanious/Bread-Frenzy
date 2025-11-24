@@ -13,7 +13,7 @@ public class GameLoader : MonoBehaviour
     [SerializeField] private float inputDelay = 0.5f;
 
     [Header("Fade Settings")]
-    [SerializeField] private CanvasGroup fadeCanvasGroup; // assign FadePanel here
+    [SerializeField] private CanvasGroup fadeCanvasGroup;
     [SerializeField] private float fadeDuration = 0.6f;
     [SerializeField] private bool fadeInOnStart = true;
     [SerializeField] private bool disableFadePanelAfterFadeIn = true;
@@ -30,7 +30,6 @@ public class GameLoader : MonoBehaviour
     {
         if (fadeCanvasGroup != null && fadeInOnStart)
         {
-            // Start fully black and fade in
             fadeCanvasGroup.alpha = 1f;
             StartCoroutine(Fade(1f, 0f, fadeDuration, () =>
             {
@@ -45,7 +44,7 @@ public class GameLoader : MonoBehaviour
         }
         else
         {
-            // No fade-in; just enable input after delay
+            // failsafe
             StartCoroutine(EnableInputAfterDelay());
         }
     }
@@ -81,10 +80,8 @@ public class GameLoader : MonoBehaviour
         if (fadeCanvasGroup != null && !isFading)
         {
             isFading = true;
-            // Make sure it's active in case it was disabled after fade-in
             EnsureFadePanelIsUsable();
 
-            // Fade to black, then load next scene
             StartCoroutine(Fade(0f, 1f, fadeDuration, () =>
             {
                 SceneManager.LoadScene(sceneToLoad);
@@ -131,13 +128,11 @@ public class GameLoader : MonoBehaviour
     {
         if (fadeCanvasGroup == null) return;
 
-        // Make sure the GameObject is active
         if (!fadeCanvasGroup.gameObject.activeSelf)
         {
             fadeCanvasGroup.gameObject.SetActive(true);
         }
 
-        // Make sure the component itself is enabled
         if (!fadeCanvasGroup.enabled)
         {
             fadeCanvasGroup.enabled = true;

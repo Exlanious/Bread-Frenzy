@@ -14,7 +14,6 @@ public class SceneFadeIn : MonoBehaviour
 
         if (fadeCanvasGroup != null)
         {
-            // Start fully black
             fadeCanvasGroup.alpha = 1f;
         }
     }

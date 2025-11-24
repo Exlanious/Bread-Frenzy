@@ -9,7 +9,7 @@ public class EnemyAttack : MonoBehaviour
 
     [Header("Attack Settings")]
     public int damage = 1;
-    public float attackCooldown = 0.5f; // seconds between hits
+    public float attackCooldown = 0.5f;
     public float attackRange = 1.5f;
 
     private float lastAttackTime = -999f;

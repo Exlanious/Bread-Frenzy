@@ -38,12 +38,11 @@ public class EnemyMoveAI : MonoBehaviour
         if (agent == null) agent = GetComponent<NavMeshAgent>();
         if (rigidBody == null) rigidBody = GetComponent<Rigidbody>();
 
-        agent.stoppingDistance = 0f;          // we handle distance manually
+        agent.stoppingDistance = 0f;       
     }
 
     void Update()
     {
-        // Ground check
         if (groundCheck != null)
         {
             isGrounded = Physics.CheckSphere(groundCheck.position, groundDistance, groundMask);
@@ -56,12 +55,10 @@ public class EnemyMoveAI : MonoBehaviour
         if (!agent.enabled || !agent.isOnNavMesh)
             return;
 
-        // Direction to player on XZ plane
         Vector3 toPlayer = player.position - transform.position;
         toPlayer.y = 0f;
         float distance = toPlayer.magnitude;
 
-        // If already within stop distance, just stop the agent
         if (distance <= stopDistance)
         {
             agent.isStopped = true;
@@ -71,7 +68,6 @@ public class EnemyMoveAI : MonoBehaviour
         agent.isStopped = false;
         agent.speed = chaseSpeed;
 
-        // Target a point at "stopDistance" away from the player
         Vector3 targetPos = player.position - toPlayer.normalized * stopDistance;
         agent.SetDestination(targetPos);
     }
@@ -88,9 +84,6 @@ public class EnemyMoveAI : MonoBehaviour
             agent.isStopped = false;
     }
 
-    // --------------------------------------------------------------------
-    // TELEPORT -> Bread Frenzy: Not implemented. 
-    // --------------------------------------------------------------------
     public void Teleport(Vector3 targetPosition)
     {
         StartCoroutine(TeleportResolveCoroutine(targetPosition));
@@ -98,34 +91,27 @@ public class EnemyMoveAI : MonoBehaviour
 
     private IEnumerator TeleportResolveCoroutine(Vector3 targetPosition)
     {
-        yield return null; // Wait one frame to ensure transform sync
-
-        // Temporarily disable agent
+        yield return null; 
         agent.enabled = false;
 
-        // --- Try snap to nearest NavMesh ---
         if (NavMesh.SamplePosition(targetPosition, out NavMeshHit hit, navMeshSnapDistance, NavMesh.AllAreas))
         {
             transform.position = hit.position;
         }
         else
         {
-            // --- Set up physics state ---
             rigidBody.useGravity = true;
             rigidBody.isKinematic = false;
             rigidBody.linearVelocity = Vector3.up * teleportHeightForce;
 
-            // Teleport
             transform.position = targetPosition;
             Physics.SyncTransforms();
 
-            // --- Wait for ground detection ---
             isGrounded = false;
             yield return new WaitForFixedUpdate();
             yield return new WaitUntil(() => isGrounded);
             yield return new WaitForSeconds(stunDuration);
 
-            // --- Re-enable NavMesh Agent ---
             rigidBody.linearVelocity = Vector3.zero;
             rigidBody.angularVelocity = Vector3.zero;
             rigidBody.isKinematic = true;
@@ -142,7 +128,6 @@ public class EnemyMoveAI : MonoBehaviour
         Gizmos.color = agent != null && agent.enabled ? Color.yellow : Color.red;
         Gizmos.DrawWireSphere(transform.position, stopDistance);
 
-        // Draw snap distance radius
         Gizmos.color = Color.cyan;
         Gizmos.DrawWireSphere(transform.position, navMeshSnapDistance);
     }

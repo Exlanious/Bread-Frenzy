@@ -5,10 +5,9 @@ using TMPro;
 public class XPBarUI : MonoBehaviour
 {
     [Header("UI References")]
-    public Image fillImage;        // circular image
+    public Image fillImage;        
     public TextMeshProUGUI levelText;
 
-    // currentXP can be a float so we can animate smoothly
     public void SetXP(float currentXP, int xpToNextLevel, int level)
     {
         float fill = 0f;

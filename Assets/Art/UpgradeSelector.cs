@@ -8,10 +8,10 @@ public class UpgradeSelector : MonoBehaviour
     [Header("UI Elements")]
     [SerializeField] private Transform cardCanvas;
     [SerializeField] private Button SkipButton;
-    [SerializeField] private Image backgroundImage;   // NEW
+    [SerializeField] private Image backgroundImage; 
 
     [Header("Card Styling")]
-    [SerializeField] private TMP_FontAsset upgradeFont;   // 🔹 NEW
+    [SerializeField] private TMP_FontAsset upgradeFont;
 
     [Header("Settings")]
     [SerializeField] private int numGeneratedCards = 3;
@@ -23,7 +23,6 @@ public class UpgradeSelector : MonoBehaviour
     private Queue<int> upgradeQueue = new Queue<int>();
     private bool isShowingUpgrade = false;
 
-    // Current options being shown
     private AbilityUpgrade[] currentOptions;
 
     void Start()
@@ -37,7 +36,6 @@ public class UpgradeSelector : MonoBehaviour
         if (backgroundImage == null)
             backgroundImage = GetComponent<Image>();
 
-        // 🔹 Make sure SkipButton actually calls OnSkipPressed
         if (SkipButton != null)
         {
             SkipButton.onClick.RemoveAllListeners();
@@ -53,7 +51,7 @@ public class UpgradeSelector : MonoBehaviour
     /// </summary>
     public void QueueUpgrade()
     {
-        upgradeQueue.Enqueue(1);   // just a token to say "we owe one upgrade choice"
+        upgradeQueue.Enqueue(1); 
         TryShowNextUpgrade();
     }
 
@@ -77,7 +75,6 @@ public class UpgradeSelector : MonoBehaviour
             return;
         }
 
-        // Get unique upgrade options from backend
         currentOptions = abilitySelector.GetRandomOptions(numGeneratedCards);
         if (currentOptions == null || currentOptions.Length == 0)
         {
@@ -87,11 +84,9 @@ public class UpgradeSelector : MonoBehaviour
             return;
         }
 
-        // show background
         if (backgroundImage != null)
             backgroundImage.enabled = true;
 
-        // show card UI
         if (cardCanvas != null)
             cardCanvas.gameObject.SetActive(true);
 
@@ -99,50 +94,40 @@ public class UpgradeSelector : MonoBehaviour
             SkipButton.gameObject.SetActive(true);
 
 
-        // clear old cards
         foreach (Transform child in cardCanvas)
             Destroy(child.gameObject);
 
-        // generate UI cards for each option
         for (int i = 0; i < currentOptions.Length; i++)
         {
             CreateUpgradeCard(currentOptions[i], i);
         }
 
-        // 🔹 SHOW CURSOR + pause game
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
 
-        // Simple pause without GameManager dependency
         Time.timeScale = 0f;
     }
 
     private void CreateUpgradeCard(AbilityUpgrade upgrade, int index)
     {
-        // --- Create the card object ---
         GameObject cardObj = new GameObject("UpgradeCard_" + upgrade.upgradeName);
         cardObj.transform.SetParent(cardCanvas, false);
 
-        // Background Image
         var image = cardObj.AddComponent<Image>();
         image.color = new Color(0.2f, 0.2f, 0.2f, 0.90f);
 
-        // Button
         var button = cardObj.AddComponent<Button>();
 
-        // BIG CARD SIZE (550 × 720)
         var rt = cardObj.GetComponent<RectTransform>();
         rt.anchorMin = new Vector2(0.5f, 0.5f);
         rt.anchorMax = new Vector2(0.5f, 0.5f);
         rt.pivot     = new Vector2(0.5f, 0.5f);
         rt.sizeDelta = new Vector2(550f, 720f);
 
-        // Let HorizontalLayoutGroup respect this
         var layout = cardObj.AddComponent<LayoutElement>();
         layout.preferredWidth  = 550f;
         layout.preferredHeight = 720f;
 
-        // --- TEXT ---
         GameObject textObj = new GameObject("Label");
         textObj.transform.SetParent(cardObj.transform, false);
 
@@ -151,22 +136,18 @@ public class UpgradeSelector : MonoBehaviour
         text.fontSize = 54;
         text.alignment = TextAlignmentOptions.Center;
 
-        // Use custom font if assigned
         if (upgradeFont != null)
             text.font = upgradeFont;
 
-        // Text RectTransform (THIS is the rtText you were missing!)
         var rtText = text.GetComponent<RectTransform>();
         rtText.anchorMin = Vector2.zero;
         rtText.anchorMax = Vector2.one;
-        rtText.offsetMin = new Vector2(40, 40);   // padding
+        rtText.offsetMin = new Vector2(40, 40);  
         rtText.offsetMax = new Vector2(-40, -40);
 
-        // --- Hover effect script ---
         var hover = cardObj.AddComponent<UpgradeCardHover>();
         hover.Init(image, text);
 
-        // --- Click Handler ---
         int capturedIndex = index;
         button.onClick.AddListener(() => OnUpgradeSelected(capturedIndex));
     }
@@ -191,7 +172,6 @@ public class UpgradeSelector : MonoBehaviour
 
     public void OnSkipPressed()
     {
-        // Skip without applying any upgrade
         Debug.Log("Upgrade skipped.");
 
         if (upgradeQueue.Count > 0)
@@ -206,23 +186,19 @@ public class UpgradeSelector : MonoBehaviour
         isShowingUpgrade = false;
         currentOptions = null;
 
-        // 🔹 HIDE CURSOR + unpause
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
 
         Time.timeScale = 1f;
 
-        // If we queued multiple level-ups, show the next one
         TryShowNextUpgrade();
     }
 
     private void HideUI()
     {
-        // Hide the background panel image
         if (backgroundImage != null)
             backgroundImage.enabled = false;
 
-        // Hide the cards + skip button
         if (cardCanvas != null)
             cardCanvas.gameObject.SetActive(false);
 

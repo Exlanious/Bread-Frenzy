@@ -27,11 +27,9 @@ public class UITextPulse : MonoBehaviour
     {
         timer += Time.deltaTime;
 
-        // --- Pulse ---
         float scale = Mathf.Lerp(1f, pulseScale, (Mathf.Sin(timer * pulseSpeed) + 1f) / 2f);
         transform.localScale = originalScale * scale;
 
-        // --- Fade ---
         float alpha = Mathf.Lerp(minAlpha, 1f, (Mathf.Sin(timer * pulseSpeed) + 1f) / 2f);
         Color c = originalColor;
         c.a = alpha;

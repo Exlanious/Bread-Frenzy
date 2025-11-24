@@ -19,7 +19,7 @@ public class EnemyHealth : MonoBehaviour
 
     [Header("Hit Feedback")]
     public bool enableHitFlash = true;
-    public Renderer meshRenderer;               // works with MeshRenderer or SkinnedMeshRenderer
+    public Renderer meshRenderer;              
     public Color hitColor = Color.red;
     public float flashDuration = 0.08f;
 
@@ -30,22 +30,19 @@ public class EnemyHealth : MonoBehaviour
     [Header("Knockback")]
     public bool enableKnockback = true;
     public float knockbackDistance = 2f;
-    public float knockbackDuration = 0.2f;   // a bit longer
+    public float knockbackDuration = 0.2f;  
 
-    // NEW:
-    public float verticalBump = 0.4f;        // little hop
+    public float verticalBump = 0.4f;        
     public AnimationCurve knockbackCurve = AnimationCurve.EaseInOut(0, 0, 1, 1);
 
 
     public event Action<EnemyHealth> OnEnemyDied;
 
     [Header("XP Settings")]
-    public int xpValue = 1;   // how much XP this enemy gives
+    public int xpValue = 1;  
 
-    public static System.Action<int> OnAnyEnemyDied; // xpValue passed to listeners
+    public static System.Action<int> OnAnyEnemyDied;
 
-
-    // cached
     private Material[] materials;
     private Color[] originalColors;
     private bool isFlashing;
@@ -78,13 +75,11 @@ public class EnemyHealth : MonoBehaviour
         agent = GetComponent<NavMeshAgent>();
     }
 
-    // OLD signature kept for anything else that calls it
     public void TakeDamage(int amount)
     {
         TakeDamage(amount, Vector3.zero);
     }
 
-    // NEW: damage with knockback direction
     public void TakeDamage(int amount, Vector3 hitDirection)
     {
         if (currentHealth <= 0) return;
@@ -94,7 +89,6 @@ public class EnemyHealth : MonoBehaviour
 
         UpdateHealthBar();
 
-        // visual + movement reaction
         StartCoroutine(HitReactionRoutine(hitDirection));
 
         if (currentHealth <= 0)
@@ -105,7 +99,6 @@ public class EnemyHealth : MonoBehaviour
 
     private IEnumerator HitReactionRoutine(Vector3 hitDirection)
     {
-        // stop agent while reacting / being knocked back
         if (enableHitStun && agent != null)
         {
             agent.isStopped = true;
@@ -154,7 +147,6 @@ public class EnemyHealth : MonoBehaviour
         if (inKnockback) yield break;
         inKnockback = true;
 
-        // flatten direction
         hitDirection.y = 0f;
         hitDirection.Normalize();
 
@@ -167,13 +159,10 @@ public class EnemyHealth : MonoBehaviour
         {
             float t = elapsed / knockbackDuration;
 
-            // ease using curve instead of raw t
             float eased = knockbackCurve.Evaluate(t);
 
-            // base horizontal knockback
             Vector3 pos = Vector3.Lerp(startPos, targetPos, eased);
 
-            // add a little arc (up then down)
             float height = Mathf.Sin(t * Mathf.PI) * verticalBump;
             pos.y = startPos.y + height;
 
@@ -203,18 +192,16 @@ public class EnemyHealth : MonoBehaviour
         if (healthBar != null)
             healthBar.gameObject.SetActive(false);
 
-        // Start death animation
         StartCoroutine(DeathRoutine());
     }
 
     private IEnumerator DeathRoutine()
     {
-        float duration = 0.3f;          // how long the effect lasts
+        float duration = 0.3f;         
         float elapsed = 0f;
 
         Vector3 startScale = transform.localScale;
 
-        // Cache materials so we can fade them
         Material[] mats = meshRenderer != null ? meshRenderer.materials : null;
         Color[] startColors = null;
 
@@ -234,10 +221,8 @@ public class EnemyHealth : MonoBehaviour
         {
             float t = elapsed / duration;
 
-            // Scale down
             transform.localScale = Vector3.Lerp(startScale, Vector3.zero, t);
 
-            // Fade out
             if (mats != null)
             {
                 for (int i = 0; i < mats.Length; i++)
@@ -256,7 +241,6 @@ public class EnemyHealth : MonoBehaviour
             yield return null;
         }
 
-        // Make sure it ends fully invisible + tiny
         transform.localScale = Vector3.zero;
 
         if (destroyOnDeath)
