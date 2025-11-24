@@ -264,6 +264,7 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+  xpValue: 5
 --- !u!195 &48614817306735290
 NavMeshAgent:
   m_ObjectHideFlags: 0

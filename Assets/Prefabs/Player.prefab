@@ -276,6 +276,9 @@ GameObject:
   - component: {fileID: 8099290484106084869}
   - component: {fileID: 7398132229108156665}
   - component: {fileID: 9139952844249505562}
+  - component: {fileID: 6498540831953964109}
+  - component: {fileID: 7760741956113520244}
+  - component: {fileID: 303807900617876326}
   m_Layer: 2
   m_Name: Player
   m_TagString: Player
@@ -429,6 +432,10 @@ MonoBehaviour:
   groundMask:
     serializedVersion: 2
     m_Bits: 64
+  dashKey: 304
+  dashDistance: 4
+  dashDuration: 0.12
+  dashCooldown: 0.4
 --- !u!114 &8099290484106084869
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -485,6 +492,54 @@ MonoBehaviour:
   hittableLayers:
     serializedVersion: 2
     m_Bits: 4294967295
+--- !u!114 &6498540831953964109
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4500930653935993278}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d14d0f39f7b09684d981e398bd80e894, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  baseDamage: 1
+  baseRadius: 1
+  hasProjectile: 0
+  projectileCount: 0
+  damage: 0
+  radius: 0
+--- !u!114 &7760741956113520244
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4500930653935993278}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fc4e503dcdb5ec9469ff612597dcb709, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  stats: {fileID: 6498540831953964109}
+--- !u!114 &303807900617876326
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4500930653935993278}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4af5f037c042bf748b7d7e7e37ea5206, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  level: 1
+  currentXP: 0
+  xpToNextLevel: 5
+  xpGrowthFactor: 1.5
+  upgradeSelector: {fileID: 0}
 --- !u!1 &5769394161550814593
 GameObject:
   m_ObjectHideFlags: 0

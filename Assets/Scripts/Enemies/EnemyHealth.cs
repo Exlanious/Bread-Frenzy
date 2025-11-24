@@ -39,6 +39,12 @@ public class EnemyHealth : MonoBehaviour
 
     public event Action<EnemyHealth> OnEnemyDied;
 
+    [Header("XP Settings")]
+    public int xpValue = 1;   // how much XP this enemy gives
+
+    public static System.Action<int> OnAnyEnemyDied; // xpValue passed to listeners
+
+
     // cached
     private Material[] materials;
     private Color[] originalColors;
@@ -263,5 +269,6 @@ public class EnemyHealth : MonoBehaviour
     void OnDestroy()
     {
         OnEnemyDied?.Invoke(this);
+        OnAnyEnemyDied?.Invoke(xpValue);
     }
 }
