@@ -492,7 +492,9 @@ MonoBehaviour:
   hittableLayers:
     serializedVersion: 2
     m_Bits: 4294967295
-  playerStats: {fileID: 0}
+  playerStats: {fileID: 6498540831953964109}
+  slashPrefab: {fileID: 6277541695491469613, guid: 75511794883665b458842b86d526d08b, type: 3}
+  slashSpawnDistance: 1.5
 --- !u!114 &6498540831953964109
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -795,7 +797,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &4652424121413291564
 Transform:
   m_ObjectHideFlags: 0

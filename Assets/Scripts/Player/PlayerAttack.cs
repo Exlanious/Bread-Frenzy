@@ -8,20 +8,24 @@ public class PlayerAttack : MonoBehaviour
     public KeyCode attackKey = KeyCode.Mouse0;
     public float attackDuration = 0.15f;
     public float attackCooldown = 0.25f;
-    public float knockbackForce = 8f;  // currently not used, kept for future if you want
-    public float upwardBias = 0.4f;    // same as above
+    public float knockbackForce = 8f; 
+    public float upwardBias = 0.4f;    
 
     [Header("References (assign in inspector)")]
-    public Collider attackCollider;                 // hitbox (isTrigger)
-    public CollisionBroadcaster hitboxBroadcaster;  // broadcaster component on hitbox
+    public Collider attackCollider;               
+    public CollisionBroadcaster hitboxBroadcaster; 
     [Tooltip("Optional visual mesh to flash when attacking.")]
     public MeshRenderer attackRenderer;
 
     [Header("Hit Filter")]
-    public LayerMask hittableLayers = ~0; // everything by default
+    public LayerMask hittableLayers = ~0; 
 
     [Header("Stats")]
     public PlayerStats playerStats;
+    [Header("Slash Prefab")]
+    public GameObject slashPrefab;
+    public float slashSpawnDistance = 1.5f;
+
 
     // Internal state
     private bool isAttacking;
@@ -40,7 +44,6 @@ public class PlayerAttack : MonoBehaviour
         if (attackRenderer != null)
             attackRenderer.enabled = false;
 
-        // Auto-find PlayerStats if not assigned
         if (playerStats == null)
             playerStats = GetComponent<PlayerStats>();
     }
@@ -65,45 +68,58 @@ public class PlayerAttack : MonoBehaviour
 
     IEnumerator PerformAttack()
     {
+        if (slashPrefab == null)
+        {
+            Debug.LogWarning("PlayerAttack: No slashPrefab assigned!");
+            yield break;
+        }
+
         canAttack = false;
         isAttacking = true;
 
-        // Update hitbox size based on PlayerStats.radius
-        ApplyRadiusFromStats();
+        Vector3 spawnPos = transform.position + Vector3.up * 0.1f;
+        Quaternion spawnRot = Quaternion.LookRotation(transform.forward, Vector3.up);
 
-        if (attackCollider != null)
-            attackCollider.enabled = true;
+        GameObject slashInstance = Instantiate(slashPrefab, spawnPos, spawnRot);
+        slashInstance.transform.SetParent(transform, true);
 
-        if (attackRenderer != null)
-            attackRenderer.enabled = true;
+        float radiusMult = 1f;
+        if (playerStats != null)
+            radiusMult = playerStats.radius;
+
+        slashInstance.transform.localScale *= radiusMult;
+
+        CollisionBroadcaster broadcaster = slashInstance.GetComponent<CollisionBroadcaster>();
+        if (broadcaster != null)
+        {
+            broadcaster.OnTriggerEnterEvent += OnHitboxTriggerEnter;
+        }
 
         yield return new WaitForSeconds(attackDuration);
 
-        if (attackCollider != null)
-            attackCollider.enabled = false;
-
-        if (attackRenderer != null)
-            attackRenderer.enabled = false;
-
         isAttacking = false;
+
+        if (broadcaster != null)
+        {
+            broadcaster.OnTriggerEnterEvent -= OnHitboxTriggerEnter;
+        }
+
         yield return new WaitForSeconds(attackCooldown);
         canAttack = true;
     }
+
 
     private void OnHitboxTriggerEnter(Collider other)
     {
         if (!isAttacking) return;
         if (other == null || other.gameObject == gameObject) return;
 
-        // Layer filter
         if (((1 << other.gameObject.layer) & hittableLayers) == 0) return;
 
-        // Direction from player to enemy (horizontal)
         Vector3 dir = (other.transform.position - transform.position);
         dir.y = 0f;
         dir = dir.normalized;
 
-        // Damage from PlayerStats
         EnemyHealth enemyHealth = other.GetComponent<EnemyHealth>();
         if (enemyHealth != null)
         {
@@ -111,7 +127,7 @@ public class PlayerAttack : MonoBehaviour
             if (playerStats != null)
                 dmg = Mathf.Max(1, Mathf.RoundToInt(playerStats.damage));
 
-            enemyHealth.TakeDamage(dmg, dir); // uses your knockback-aware overload
+            enemyHealth.TakeDamage(dmg, dir); 
         }
     }
 
@@ -143,7 +159,7 @@ public class PlayerAttack : MonoBehaviour
 
         float radiusMult = 1f;
         if (playerStats != null)
-            radiusMult = playerStats.radius; // 1 = default, 1.5 = 50% bigger, etc.
+            radiusMult = playerStats.radius;
 
         if (attackCollider is SphereCollider sphere)
         {
