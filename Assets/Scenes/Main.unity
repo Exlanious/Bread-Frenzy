@@ -1399,8 +1399,29 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aa2b0d709a3396e44b99817352dfff28, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  enemiesToSpawn: 5
-  spawnInterval: 0.5
+  waves:
+  - waveName: Wave 1
+    waveType: 0
+    enemyCount: 5
+    spawnInterval: 0.7
+  - waveName: Wave 2
+    waveType: 0
+    enemyCount: 8
+    spawnInterval: 0.6
+  - waveName: Break
+    waveType: 1
+    enemyCount: 0
+    spawnInterval: 0.5
+  - waveName: Mini-Boss
+    waveType: 2
+    enemyCount: 1
+    spawnInterval: 0.1
+  - waveName: Power Wave
+    waveType: 3
+    enemyCount: 20
+    spawnInterval: 0.2
+  timeBetweenWaves: 3
+  breakWaveDuration: 4
   spawner: {fileID: 1472947008}
 --- !u!4 &908837679
 Transform:
@@ -1744,6 +1765,14 @@ PrefabInstance:
       propertyPath: upgradeUI
       value: 
       objectReference: {fileID: 798388953}
+    - target: {fileID: 303807900617876326, guid: 0964ed6b2ed5194439fcf41c67eb1fee, type: 3}
+      propertyPath: xpToNextLevel
+      value: 15
+      objectReference: {fileID: 0}
+    - target: {fileID: 303807900617876326, guid: 0964ed6b2ed5194439fcf41c67eb1fee, type: 3}
+      propertyPath: xpGrowthFactor
+      value: 1.35
+      objectReference: {fileID: 0}
     - target: {fileID: 3150594018771378875, guid: 0964ed6b2ed5194439fcf41c67eb1fee, type: 3}
       propertyPath: cameraTransform
       value: 

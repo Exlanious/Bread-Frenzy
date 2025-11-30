@@ -7,8 +7,8 @@ public class PlayerXP : MonoBehaviour
     public int level = 1;
 
     public int currentXP = 0;
-    public int xpToNextLevel = 5;
-    public float xpGrowthFactor = 1.5f;
+    public int xpToNextLevel = 15;
+    public float xpGrowthFactor = 1.35f;
 
     [Header("References")]
     public UpgradeSelector upgradeUI;  
@@ -103,13 +103,27 @@ public class PlayerXP : MonoBehaviour
 
         xpToNextLevel = Mathf.RoundToInt(xpToNextLevel * xpGrowthFactor);
 
-        if (upgradeUI != null)
+        bool shouldGrantUpgrade = false;
+
+        if (level <= 3)
         {
-            upgradeUI.QueueUpgrade();
+            shouldGrantUpgrade = true;
         }
-        else
+        else if ((level % 2) == 1)
         {
-            Debug.LogWarning("PlayerXP: upgradeUI is null, cannot show upgrade choices.");
+            shouldGrantUpgrade = true;
+        }
+
+        if (shouldGrantUpgrade)
+        {
+            if (upgradeUI != null)
+            {
+                upgradeUI.QueueUpgrade();
+            }
+            else
+            {
+                Debug.LogWarning("PlayerXP: upgradeUI is null, cannot show upgrade choices.");
+            }
         }
 
         UpdateXPUI();
