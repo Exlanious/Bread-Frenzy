@@ -31,7 +31,7 @@ public class PlayerHealth : MonoBehaviour
 
     public void TakeDamage(int amount)
     {
-        if (Time.time - lastDamageTime < invincibilityDuration)
+            if (Time.time - lastDamageTime < invincibilityDuration)
             return;
 
         lastDamageTime = Time.time;
