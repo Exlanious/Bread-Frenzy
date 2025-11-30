@@ -351,6 +351,12 @@ public class WaveManager : MonoBehaviour
         health.OnEnemyDied -= HandleEnemyDied;
         enemiesAlive--;
 
+        // Count this enemy as defeated
+        if (RunStats.Instance != null)
+        {
+            RunStats.Instance.RegisterEnemyDefeated();
+        }
+
         if (waveActive && enemiesAlive <= 0)
         {
             EndWave();
@@ -361,6 +367,11 @@ public class WaveManager : MonoBehaviour
     {
         waveActive = false;
         Debug.Log($"[WaveManager] {currentWave.waveName} (Wave {currentWaveNumber}) complete! All enemies dead.");
+
+        if (RunStats.Instance != null && currentWave != null && currentWave.waveType != WaveType.Break)
+        {
+            RunStats.Instance.RegisterWaveCleared();
+        }
 
         StartCoroutine(WaitAndStartNextWave());
     }

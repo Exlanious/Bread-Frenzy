@@ -31,10 +31,16 @@ public class PlayerHealth : MonoBehaviour
 
     public void TakeDamage(int amount)
     {
-            if (Time.time - lastDamageTime < invincibilityDuration)
+        if (Time.time - lastDamageTime < invincibilityDuration)
             return;
 
         lastDamageTime = Time.time;
+
+        // Track damage taken for this run
+        if (RunStats.Instance != null && amount > 0)
+        {
+            RunStats.Instance.RegisterDamageTaken(amount);
+        }
 
         currentHealth -= amount;
         currentHealth = Mathf.Max(currentHealth, 0);
@@ -51,8 +57,6 @@ public class PlayerHealth : MonoBehaviour
 
         UpdateHealthBar();
     }
-
-
 
     private void Die()
     {
