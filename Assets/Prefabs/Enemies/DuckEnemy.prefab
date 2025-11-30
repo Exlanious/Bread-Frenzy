@@ -202,8 +202,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   player: {fileID: 7505426006019706227, guid: 0964ed6b2ed5194439fcf41c67eb1fee, type: 3}
   damage: 1
-  attackCooldown: 0.5
-  attackRange: 1.5
+  attackCooldown: 1
+  attackRange: 2.5
 --- !u!114 &2726376494036865151
 MonoBehaviour:
   m_ObjectHideFlags: 0

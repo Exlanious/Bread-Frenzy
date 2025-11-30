@@ -1,14 +1,16 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.AI;
+
+// Types of waves we support
 public enum WaveType
 {
     Normal,
     Break,
     MiniBoss,
     Power,
-    Boss,
-    Spike
+    Boss
 }
 
 [System.Serializable]
@@ -16,45 +18,82 @@ public class Wave
 {
     public string waveName = "Wave";
     public WaveType waveType = WaveType.Normal;
-
-    [Tooltip("How many enemies to spawn in this wave (ignored for Break waves).")]
     public int enemyCount = 5;
-
-    [Tooltip("Delay between each enemy spawn in this wave.")]
     public float spawnInterval = 0.5f;
 }
 
 public class WaveManager : MonoBehaviour
 {
-    [Header("Wave Settings")]
-    public List<Wave> waves = new List<Wave>();
+    [Header("Endless Wave Settings")]
+    [Tooltip("Base enemy count for the very first combat wave.")]
+    public int startingEnemyCount = 3;
 
-    [Tooltip("Delay between the end of one wave and the start of the next (except Break waves, which use BreakWaveDuration).")]
+    [Tooltip("How much the base enemy count grows each wave (multiplier).")]
+    public float enemyCountGrowth = 1.25f;
+
+    [Tooltip("Starting spawn interval between enemies in early waves.")]
+    public float startingSpawnInterval = 0.8f;
+
+    [Tooltip("Minimum spawn interval as waves get faster.")]
+    public float minSpawnInterval = 0.15f;
+
+    [Tooltip("Each wave, spawn interval *= this (e.g. 0.95 = 5% faster per wave).")]
+    public float spawnIntervalDecay = 0.95f;
+
+    [Header("Special Wave Cadence")]
+    [Tooltip("Every N waves, spawn a Break wave. Set <= 0 to disable.")]
+    public int breakEvery = 5;
+
+    [Tooltip("Every N waves, spawn a Mini-Boss wave. Set <= 0 to disable.")]
+    public int miniBossEvery = 7;
+
+    [Tooltip("Every N waves, spawn a Boss wave. Set <= 0 to disable.")]
+    public int bossEvery = 10;
+
+    [Tooltip("Every N waves, spawn a Power wave (if not overridden by boss/miniboss/break). Set <= 0 to disable.")]
+    public int powerEvery = 4;
+
+    [Header("Timing")]
     public float timeBetweenWaves = 3f;
-
-    [Tooltip("How long a Break wave lasts (no enemies, just rest).")]
     public float breakWaveDuration = 4f;
 
-    [Header("References")]
+    [Header("Refs")]
     [SerializeField] private EnemyHordeSpawner spawner;
+    [SerializeField] private PlayerXP playerXP;
 
-    private int currentWaveIndex = -1;
+    [Header("Break Wave Effects")]
+    [Tooltip("How much HP the player heals at the start of a Break wave.")]
+    public int breakWaveHealAmount = 1;
+
+    [SerializeField] private PlayerHealth playerHealth;
+
+    [Header("Scaling vs Wave & Player")]
+    [Tooltip("Extra enemy max health per wave (e.g. 0.15 = +15% per wave).")]
+    public float healthPerWave = 0.15f;
+
+    [Tooltip("Extra enemy max health per player level above 1.")]
+    public float healthPerLevel = 0.10f;
+
+    [Tooltip("Extra enemy damage per wave.")]
+    public float damagePerWave = 0.04f;
+
+    [Tooltip("Extra enemy damage per player level above 1.")]
+    public float damagePerLevel = 0.03f;
+
+    [Tooltip("Extra enemy move speed per wave.")]
+    public float speedPerWave = 0.05f;
+
+    [Tooltip("Extra enemy move speed per player level above 1.")]
+    public float speedPerLevel = 0.04f;
+
+    private int currentWaveNumber = 0;   
     private int enemiesAlive = 0;
     private bool waveActive = false;
 
-    [Header("Player Scaling")]
-    [SerializeField] private PlayerXP playerXP;
+    private int currentBaseEnemyCount;
+    private float currentSpawnInterval;
 
-    // How much enemies scale with each wave
-    [SerializeField] private float baseHealthPerWave = 0.15f;
-    [SerializeField] private float baseDamagePerWave = 0.10f;
-    [SerializeField] private float baseSpeedPerWave = 0.05f;
-
-    // How much enemies scale with each player level above 1
-    [SerializeField] private float healthPerPlayerLevel = 0.08f;
-    [SerializeField] private float damagePerPlayerLevel = 0.06f;
-    [SerializeField] private float speedPerPlayerLevel = 0.04f;
-
+    private Wave currentWave;
 
     private void Start()
     {
@@ -65,47 +104,74 @@ public class WaveManager : MonoBehaviour
         }
 
         if (playerXP == null)
+        {
             playerXP = FindObjectOfType<PlayerXP>();
+            if (playerXP == null)
+            {
+                Debug.LogWarning("[WaveManager] No PlayerXP found. Scaling will ignore player level.");
+            }
+        }
 
-        StartCoroutine(StartWaveRoutine());
+        if (playerHealth == null)
+        {
+            playerHealth = FindObjectOfType<PlayerHealth>();
+            if (playerHealth == null)
+            {
+                Debug.LogWarning("[WaveManager] No PlayerHealth found. Break wave healing will be disabled.");
+            }
+        }
+
+        currentBaseEnemyCount = startingEnemyCount;
+        currentSpawnInterval = startingSpawnInterval;
+
+        StartCoroutine(StartNextWave());
     }
 
-    private IEnumerator StartWaveRoutine()
+    private IEnumerator StartNextWave()
     {
-        currentWaveIndex++;
+        currentWaveNumber++;
 
-        if (currentWaveIndex >= waves.Count)
-        {
-            Debug.Log("[WaveManager] ALL WAVES COMPLETE!");
-            yield break;
-        }
+        currentWave = GenerateWave(currentWaveNumber);
 
-        Wave wave = waves[currentWaveIndex];
-        Debug.Log($"[WaveManager] Preparing {wave.waveName} ({wave.waveType})");
+        Debug.Log($"[WaveManager] Preparing {currentWave.waveName} (Wave {currentWaveNumber}, {currentWave.waveType})");
 
-        if (wave.waveType == WaveType.Break)
+        // BREAK WAVE: no enemies, just chill
+        if (currentWave.waveType == WaveType.Break)
         {
             waveActive = false;
-            Debug.Log("[WaveManager] Break wave — no enemies, just chill.");
+            enemiesAlive = 0;
+
+            Debug.Log("[WaveManager] Break wave — no enemies. Player can breathe.");
+
+            if (playerHealth != null && breakWaveHealAmount > 0)
+            {
+                playerHealth.Heal(breakWaveHealAmount);
+                Debug.Log($"[WaveManager] Break wave heal: +{breakWaveHealAmount} HP");
+            }
+
             yield return new WaitForSeconds(breakWaveDuration);
-            Debug.Log("[WaveManager] Break over. Starting next wave...");
-            StartCoroutine(StartWaveRoutine());
+
+            Debug.Log("[WaveManager] Break over. Next wave soon...");
+            yield return new WaitForSeconds(timeBetweenWaves);
+            StartCoroutine(StartNextWave());
             yield break;
         }
 
+
+        // COMBAT WAVES
         waveActive = true;
         enemiesAlive = 0;
 
-        Debug.Log($"[WaveManager] Starting {wave.waveName}. Spawning {wave.enemyCount} enemies.");
+        Debug.Log($"[WaveManager] Starting {currentWave.waveName}. Spawning {currentWave.enemyCount} enemies.");
 
-        for (int i = 0; i < wave.enemyCount; i++)
+        for (int i = 0; i < currentWave.enemyCount; i++)
         {
             GameObject enemy = spawner.SpawnEnemyFromWave();
             if (enemy != null)
             {
                 enemiesAlive++;
 
-                ApplyWaveModifiersToEnemy(enemy, wave);
+                ApplyWaveModifiersToEnemy(enemy, currentWave);
 
                 EnemyHealth health = enemy.GetComponent<EnemyHealth>();
                 if (health != null)
@@ -114,83 +180,175 @@ public class WaveManager : MonoBehaviour
                 }
             }
 
-            yield return new WaitForSeconds(wave.spawnInterval);
+            yield return new WaitForSeconds(currentWave.spawnInterval);
         }
 
         Debug.Log("[WaveManager] Finished spawning for this wave.");
     }
 
+    // ------------------------------------------------------------------
+    // Procedural wave generator
+    // ------------------------------------------------------------------
+    private Wave GenerateWave(int waveNumber)
+    {
+        Wave wave = new Wave();
+
+        // figure out type based on cadence (Boss > MiniBoss > Break > Power > Normal)
+        bool isBoss = bossEvery > 0 && waveNumber % bossEvery == 0;
+        bool isMiniBoss = miniBossEvery > 0 && waveNumber % miniBossEvery == 0;
+        bool isBreak = breakEvery > 0 && waveNumber % breakEvery == 0;
+        bool isPower = powerEvery > 0 && waveNumber % powerEvery == 0;
+
+        if (isBoss)
+        {
+            wave.waveType = WaveType.Boss;
+        }
+        else if (isMiniBoss)
+        {
+            wave.waveType = WaveType.MiniBoss;
+        }
+        else if (isBreak)
+        {
+            wave.waveType = WaveType.Break;
+        }
+        else if (isPower)
+        {
+            wave.waveType = WaveType.Power;
+        }
+        else
+        {
+            wave.waveType = WaveType.Normal;
+        }
+
+        // Now define enemyCount + spawnInterval based on type
+        switch (wave.waveType)
+        {
+            case WaveType.Break:
+                wave.waveName = "Breather";
+                wave.enemyCount = 0;
+                wave.spawnInterval = 0f;
+                break;
+
+            case WaveType.MiniBoss:
+                wave.waveName = $"Mini-Boss {waveNumber}";
+                wave.enemyCount = 1;
+                wave.spawnInterval = 0.1f;
+                break;
+
+            case WaveType.Boss:
+                wave.waveName = $"Boss Wave {waveNumber}";
+                wave.enemyCount = 1;
+                wave.spawnInterval = 0.1f;
+                break;
+
+            case WaveType.Power:
+                wave.waveName = "Power Wave";
+                // Lots of weaker enemies to shred
+                int powerCount = Mathf.RoundToInt(currentBaseEnemyCount * 1.6f);
+                wave.enemyCount = Mathf.Max(8, powerCount);
+                wave.spawnInterval = Mathf.Max(minSpawnInterval, currentSpawnInterval * 0.6f);
+                break;
+
+            case WaveType.Normal:
+            default:
+                wave.waveName = $"Wave {waveNumber}";
+
+                // A bit of randomness around the base count
+                int variation = Mathf.RoundToInt(currentBaseEnemyCount * 0.25f);
+                int randomOffset = Random.Range(-variation, variation + 1);
+                int normalCount = currentBaseEnemyCount + randomOffset;
+
+                wave.enemyCount = Mathf.Max(2, normalCount);
+                wave.spawnInterval = Mathf.Max(minSpawnInterval, currentSpawnInterval);
+                break;
+        }
+
+        // After defining this wave, update base count & spawn interval for the NEXT one
+        if (wave.waveType != WaveType.Break) // breaks don't grow the curve
+        {
+            currentBaseEnemyCount = Mathf.RoundToInt(currentBaseEnemyCount * enemyCountGrowth);
+            currentSpawnInterval = Mathf.Max(minSpawnInterval, currentSpawnInterval * spawnIntervalDecay);
+        }
+
+        return wave;
+    }
+
+    // ------------------------------------------------------------------
+    // Scaling enemies per wave + player level
+    // ------------------------------------------------------------------
     private void ApplyWaveModifiersToEnemy(GameObject enemy, Wave wave)
     {
         EnemyHealth health = enemy.GetComponent<EnemyHealth>();
         EnemyAttack attack = enemy.GetComponent<EnemyAttack>();
         EnemyMoveAI moveAI = enemy.GetComponent<EnemyMoveAI>();
+        NavMeshAgent agent = enemy.GetComponent<NavMeshAgent>();
 
-        int playerLevel = playerXP != null ? playerXP.level : 1;
+        int playerLevel = (playerXP != null) ? Mathf.Max(1, playerXP.level) : 1;
+        int levelsAboveOne = Mathf.Max(0, playerLevel - 1);
 
-        // --------- BASE MULTIPLIERS ---------
-        float healthMultiplier = 1f;
-        float damageMultiplier = 1f;
-        float speedMultiplier = 1f;
+        // Base multipliers
+        float healthMult = 1f
+            + (currentWaveNumber - 1) * healthPerWave
+            + levelsAboveOne * healthPerLevel;
 
-        // Scale by wave index
-        healthMultiplier += currentWaveIndex * baseHealthPerWave;
-        damageMultiplier += currentWaveIndex * baseDamagePerWave;
-        speedMultiplier += currentWaveIndex * baseSpeedPerWave;
+        float damageMult = 1f
+            + (currentWaveNumber - 1) * damagePerWave
+            + levelsAboveOne * damagePerLevel;
 
-        // Scale by player level
-        int extraLevels = Mathf.Max(0, playerLevel - 1);
-        healthMultiplier += extraLevels * healthPerPlayerLevel;
-        damageMultiplier += extraLevels * damagePerPlayerLevel;
-        speedMultiplier += extraLevels * speedPerPlayerLevel;
+        float speedMult = 1f
+            + (currentWaveNumber - 1) * speedPerWave
+            + levelsAboveOne * speedPerLevel;
 
-        // --------- WAVE TYPE ADJUSTMENTS ---------
+        // Adjust based on wave type
         switch (wave.waveType)
         {
-            case WaveType.Normal:
-                break;
-
             case WaveType.Power:
-                healthMultiplier *= 0.5f;   
-                damageMultiplier *= 0.7f;  
+                // Let the player feel busted
+                healthMult *= 0.5f;
+                damageMult *= 0.8f;
+                speedMult *= 0.9f;
                 break;
 
             case WaveType.MiniBoss:
-                healthMultiplier *= 3f;
-                damageMultiplier *= 2f;
-                speedMultiplier *= 0.9f; 
+                healthMult *= 3f;
+                damageMult *= 1.8f;
+                speedMult *= 0.9f;
                 enemy.transform.localScale *= 1.5f;
                 break;
 
             case WaveType.Boss:
-                healthMultiplier *= 5f;
-                damageMultiplier *= 3f;
-                speedMultiplier *= 1.1f;
+                healthMult *= 5f;
+                damageMult *= 2.2f;
+                speedMult *= 1.0f;
                 enemy.transform.localScale *= 2f;
                 break;
         }
 
+        // Apply to components
         if (health != null)
         {
-            health.maxHealth = Mathf.Max(1, Mathf.RoundToInt(health.maxHealth * healthMultiplier));
+            health.maxHealth = Mathf.Max(1, Mathf.RoundToInt(health.maxHealth * healthMult));
+            // EnemyHealth.Start() will copy maxHealth into currentHealth on spawn.
         }
 
         if (attack != null)
         {
-            attack.damage = Mathf.Max(1, Mathf.RoundToInt(attack.damage * damageMultiplier));
+            attack.damage = Mathf.Max(1, Mathf.RoundToInt(attack.damage * damageMult));
         }
 
         if (moveAI != null)
         {
-            moveAI.chaseSpeed = moveAI.chaseSpeed * speedMultiplier;
+            moveAI.chaseSpeed *= speedMult;
+            if (agent != null) agent.speed = moveAI.chaseSpeed;
         }
     }
 
-
+    // ------------------------------------------------------------------
+    // Enemy lifecycle & wave completion
+    // ------------------------------------------------------------------
     private void HandleEnemyDied(EnemyHealth health)
     {
         health.OnEnemyDied -= HandleEnemyDied;
-
         enemiesAlive--;
 
         if (waveActive && enemiesAlive <= 0)
@@ -202,7 +360,7 @@ public class WaveManager : MonoBehaviour
     private void EndWave()
     {
         waveActive = false;
-        Debug.Log($"[WaveManager] {waves[currentWaveIndex].waveName} complete! All enemies dead.");
+        Debug.Log($"[WaveManager] {currentWave.waveName} (Wave {currentWaveNumber}) complete! All enemies dead.");
 
         StartCoroutine(WaitAndStartNextWave());
     }
@@ -210,6 +368,6 @@ public class WaveManager : MonoBehaviour
     private IEnumerator WaitAndStartNextWave()
     {
         yield return new WaitForSeconds(timeBetweenWaves);
-        StartCoroutine(StartWaveRoutine());
+        StartCoroutine(StartNextWave());
     }
 }

@@ -16,6 +16,11 @@ public class PlayerHealth : MonoBehaviour
     [Tooltip("If true, log damage and death events in the console.")]
     public bool debugLogs = false;
 
+    [Header("Damage Timing")]
+    public float invincibilityDuration = 0.5f;   
+    private float lastDamageTime = -999f;
+
+
     public event Action OnPlayerDied;
     public event Action<int, int> OnHealthChanged;
 
@@ -24,11 +29,13 @@ public class PlayerHealth : MonoBehaviour
         ResetHealth();
     }
 
-    // ---------------------------------------------------------------
-    // DAMAGE & DEATH
-    // ---------------------------------------------------------------
     public void TakeDamage(int amount)
     {
+        if (Time.time - lastDamageTime < invincibilityDuration)
+            return;
+
+        lastDamageTime = Time.time;
+
         currentHealth -= amount;
         currentHealth = Mathf.Max(currentHealth, 0);
 
@@ -36,13 +43,15 @@ public class PlayerHealth : MonoBehaviour
             Debug.Log($"[PlayerHealth] Took {amount} damage. Health = {currentHealth}/{maxHealth}");
 
         OnHealthChanged?.Invoke(currentHealth, maxHealth);
-        UpdateHealthBar();
 
         if (currentHealth <= 0)
         {
             Die();
         }
+
+        UpdateHealthBar();
     }
+
 
 
     private void Die()
