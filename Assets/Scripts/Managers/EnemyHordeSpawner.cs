@@ -22,25 +22,14 @@ public class EnemyHordeSpawner : MonoBehaviour
     float spawnTimer;
     int aliveEnemies;
 
-    void Update()
+    public GameObject SpawnEnemyFromWave()
     {
-        if (enemyPrefab == null || player == null) return;
-
-        elapsedTime += Time.deltaTime;
-
-        float t = Mathf.Clamp01(elapsedTime / timeToMaxDifficulty);
-        float currentInterval = Mathf.Lerp(startInterval, minInterval, t);
-
-        spawnTimer -= Time.deltaTime;
-        if (spawnTimer <= 0f && aliveEnemies < maxAliveEnemies)
+        if (enemyPrefab == null || player == null)
         {
-            SpawnEnemy();
-            spawnTimer = currentInterval;
+            Debug.LogWarning("EnemyHordeSpawner is missing player or enemyPrefab reference.");
+            return null;
         }
-    }
 
-    void SpawnEnemy()
-    {
         Vector3 playerPos = player.position;
 
         Vector2 dir2D = Random.insideUnitCircle.normalized;
@@ -52,10 +41,11 @@ public class EnemyHordeSpawner : MonoBehaviour
         spawnPos.y = playerPos.y + 0.5f;
 
         Vector3 toPlayer = (playerPos - spawnPos);
-        toPlayer.y = 0f; 
+        toPlayer.y = 0f;
         Quaternion lookRot = Quaternion.LookRotation(toPlayer.normalized, Vector3.up);
 
         GameObject enemy = Instantiate(enemyPrefab, spawnPos, lookRot);
+
         aliveEnemies++;
 
         var duck = enemy.GetComponent<DuckEnemy>();
@@ -67,9 +57,11 @@ public class EnemyHordeSpawner : MonoBehaviour
         var moveAI = enemy.GetComponent<EnemyMoveAI>();
         if (moveAI != null)
         {
-            moveAI.player = player; 
-            moveAI.moveByAgent = true; 
+            moveAI.player = player;
+            moveAI.moveByAgent = true;
         }
+
+        return enemy;
     }
 
     public void NotifyEnemyDied()
