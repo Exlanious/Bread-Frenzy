@@ -452,6 +452,7 @@ MonoBehaviour:
   healthBar: {fileID: 9091892521627970813}
   hideWhenFull: 0
   debugLogs: 0
+  invincibilityDuration: 0.5
 --- !u!114 &7398132229108156665
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -587,7 +588,7 @@ GameObject:
   - component: {fileID: 2685911374284304295}
   - component: {fileID: 9210300974801139813}
   m_Layer: 0
-  m_Name: Image
+  m_Name: ProgressBarFill
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -767,6 +768,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   progressBarFill: {fileID: 9210300974801139813}
+  healthyColor: {r: 0, g: 1, b: 0, a: 1}
+  midColor: {r: 1, g: 0.8, b: 0, a: 1}
+  lowColor: {r: 1, g: 0, b: 0, a: 1}
 --- !u!114 &62259852550978960
 MonoBehaviour:
   m_ObjectHideFlags: 0
