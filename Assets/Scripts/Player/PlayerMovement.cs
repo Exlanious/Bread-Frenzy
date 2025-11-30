@@ -59,7 +59,7 @@ public class PlayerMovement : MonoBehaviour
 
         // Ground check
         isGrounded = Physics.CheckSphere(groundCheck.position, groundDistance, groundMask);
-        
+
         if (isDashing)
             return;
 
@@ -163,4 +163,15 @@ public class PlayerMovement : MonoBehaviour
         yield return new WaitForSeconds(dashCooldown);
         canDash = true;
     }
+
+
+    //Knockback -> set direction y to 0 for no y knockback
+    public void ApplyKnockback(Vector3 direction, float force)
+    {
+        Rigidbody rb = GetComponent<Rigidbody>();
+        if (rb == null) return;
+
+        rb.AddForce(direction.normalized * force, ForceMode.Impulse);
+    }
+
 }

@@ -12,10 +12,10 @@ public class EnemyAttack : MonoBehaviour
     // Make this a bit larger than EnemyMoveAI.stopDistance (1.5f)
     public float attackRange = 2.0f;
 
-    private float lastAttackTime = -999f;
-    private PlayerHealth playerHealth;
+    protected float lastAttackTime = -999f;
+    protected PlayerHealth playerHealth;
 
-    private void Awake()
+    protected void Awake()
     {
         // Try to find the player health in the scene
         playerHealth = FindObjectOfType<PlayerHealth>();
@@ -31,7 +31,7 @@ public class EnemyAttack : MonoBehaviour
         }
     }
 
-    private void Update()
+    protected void Update()
     {
         if (player == null || playerHealth == null)
             return;
@@ -44,13 +44,13 @@ public class EnemyAttack : MonoBehaviour
 
         if (distance <= attackRange)
         {
-            // We are in attack range – this should definitely show up
+            // We are in attack range ï¿½ this should definitely show up
             Debug.Log($"[EnemyAttack:{name}] Player in range ({distance:F2}). Trying to attack.");
             TryAttackPlayer();
         }
     }
 
-    private void TryAttackPlayer()
+    protected void TryAttackPlayer()
     {
         if (playerHealth == null) return;
 
