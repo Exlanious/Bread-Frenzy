@@ -26,6 +26,10 @@ public class PlayerHealth : MonoBehaviour
     public Color hurtFlashColor = Color.red;
     public float flashSpeed = 20f;
     public float hitstopDuration = 0.05f;
+    [Header("Invincibility Visuals")]
+    public float hurtFlashDuration = 0.15f;
+    [Range(0f, 1f)]
+    public float iframeAlpha = 0.4f;      
 
     private bool flashing = false;
     private bool inHitstop = false;
@@ -35,6 +39,13 @@ public class PlayerHealth : MonoBehaviour
 
     private void Start()
     {
+        if (playerRenderer == null)
+        {
+            playerRenderer = GetComponentInChildren<Renderer>();
+            if (playerRenderer == null && debugLogs)
+                Debug.LogWarning("[PlayerHealth] No Renderer found on player or children.");
+        }
+
         ResetHealth();
     }
 
@@ -75,22 +86,42 @@ public class PlayerHealth : MonoBehaviour
     private IEnumerator FlashRoutine()
     {
         if (playerRenderer == null || playerRenderer.material == null)
+        {
+            if (debugLogs)
+                Debug.LogWarning("[PlayerHealth] FlashRoutine aborted: playerRenderer or material is null.");
             yield break;
+        }
 
         flashing = true;
 
         Color originalColor = playerRenderer.material.color;
 
-        while (Time.time - lastDamageTime < invincibilityDuration)
+        Color transparentColor = originalColor;
+        transparentColor.a = iframeAlpha;
+
+        float flashEndTime = Time.time + hurtFlashDuration;
+
+        while (Time.time < flashEndTime)
         {
             float t = Mathf.Sin(Time.time * flashSpeed) * 0.5f + 0.5f;
-            playerRenderer.material.color = Color.Lerp(originalColor, hurtFlashColor, t);
+            Color flashColor = Color.Lerp(originalColor, hurtFlashColor, t);
+            playerRenderer.material.color = flashColor;
+
+            yield return null;
+        }
+
+        playerRenderer.material.color = transparentColor;
+
+        while (Time.time - lastDamageTime < invincibilityDuration)
+        {
+            playerRenderer.material.color = transparentColor;
             yield return null;
         }
 
         playerRenderer.material.color = originalColor;
         flashing = false;
     }
+
 
     private IEnumerator HitstopRoutine()
     {

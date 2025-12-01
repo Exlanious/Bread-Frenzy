@@ -6,9 +6,18 @@ public class PlayerMovement : MonoBehaviour
 {
     [Header("Movement Settings")]
     public float moveSpeed = 6f;
-    public float acceleration = 10f;  // higher = faster response
+    public float acceleration = 10f;
     public float deceleration = 10f;
     public float jumpForce = 7f;
+
+    [Header("Game Feel")]
+    public float coyoteTime = 0.1f;
+    public float jumpBufferTime = 0.1f;
+    public float fallGravityMultiplier = 2.5f;
+    public float lowJumpGravityMultiplier = 2f;
+    public float airControlMultiplier = 0.6f;
+    public float inputDeadzone = 0.1f;
+    public float rotationSpeed = 10f;
 
     [Header("References")]
     public Transform cameraTransform;
@@ -20,14 +29,13 @@ public class PlayerMovement : MonoBehaviour
 
     [Header("Dash Settings")]
     public KeyCode dashKey = KeyCode.LeftShift;
-    // public float dashSpeed = 15f; 
-    public float dashDistance = 4f;      
+    public float dashDistance = 4f;
     public float dashDuration = 0.12f;
     public float dashCooldown = 0.4f;
 
     [Header("Dash Attack (Crusty Dash)")]
     public AbilityManager abilityManager;
-    public AbilityUpgrade crustyDashBase; 
+    public AbilityUpgrade crustyDashBase;
     public PlayerStats playerStats;
     public CollisionBroadcaster dashBroadcaster;
     public LayerMask dashHittableLayers;
@@ -43,6 +51,10 @@ public class PlayerMovement : MonoBehaviour
     private Vector3 currentVelocity;
     private Vector3 velocitySmoothRef;
 
+    private float lastGroundedTime;
+    private float lastJumpPressedTime;
+    private bool jumpHeld;
+
     void Start()
     {
         rb = GetComponent<Rigidbody>();
@@ -50,6 +62,9 @@ public class PlayerMovement : MonoBehaviour
 
         if (playerStats == null)
             playerStats = GetComponent<PlayerStats>();
+
+        if (cameraTransform == null && Camera.main != null)
+            cameraTransform = Camera.main.transform;
     }
 
     void OnEnable()
@@ -66,68 +81,148 @@ public class PlayerMovement : MonoBehaviour
 
     void Update()
     {
+        UpdateGroundedState();
+        CacheJumpInput();
+        ApplyExtraGravity();
+
         HandleMovement();
         HandleJump();
         HandleDash();
     }
 
-    void HandleDash()
+    void UpdateGroundedState()
     {
-        if (Input.GetKeyDown(dashKey) && canDash)
+        if (groundCheck != null)
         {
-            StartCoroutine(DashRoutine());
+            bool groundedNow = Physics.CheckSphere(groundCheck.position, groundDistance, groundMask, QueryTriggerInteraction.Ignore);
+            if (groundedNow)
+            {
+                isGrounded = true;
+                lastGroundedTime = Time.time;
+            }
+            else
+            {
+                isGrounded = false;
+            }
         }
+        else
+        {
+            isGrounded = false;
+        }
+    }
+
+    void CacheJumpInput()
+    {
+        if (Input.GetButtonDown("Jump"))
+        {
+            lastJumpPressedTime = Time.time;
+            jumpHeld = true;
+        }
+
+        if (Input.GetButtonUp("Jump"))
+        {
+            jumpHeld = false;
+        }
+    }
+
+    void ApplyExtraGravity()
+    {
+        if (isDashing)
+            return;
+
+        Vector3 vel = rb.linearVelocity;
+
+        if (vel.y < 0f)
+        {
+            vel += Vector3.up * Physics.gravity.y * (fallGravityMultiplier - 1f) * Time.deltaTime;
+        }
+        else if (vel.y > 0f && !jumpHeld)
+        {
+            vel += Vector3.up * Physics.gravity.y * (lowJumpGravityMultiplier - 1f) * Time.deltaTime;
+        }
+
+        rb.linearVelocity = vel;
     }
 
     void HandleMovement()
     {
-
-        isGrounded = Physics.CheckSphere(groundCheck.position, groundDistance, groundMask);
-
         if (isDashing)
             return;
 
-        float x = Input.GetAxis("Horizontal");
-        float z = Input.GetAxis("Vertical");
+        float x = Input.GetAxisRaw("Horizontal");
+        float z = Input.GetAxisRaw("Vertical");
 
-        Vector3 forward = cameraTransform.forward;
-        Vector3 right = cameraTransform.right;
+        Vector2 input = new Vector2(x, z);
+        if (input.magnitude < inputDeadzone)
+        {
+            input = Vector2.zero;
+        }
+        else
+        {
+            input = input.normalized;
+        }
+
+        Vector3 forward = cameraTransform != null ? cameraTransform.forward : Vector3.forward;
+        Vector3 right = cameraTransform != null ? cameraTransform.right : Vector3.right;
+
         forward.y = 0f;
         right.y = 0f;
         forward.Normalize();
         right.Normalize();
 
-        Vector3 inputDir = (forward * z + right * x).normalized;
-        Vector3 targetVelocity = inputDir * moveSpeed;
+        Vector3 inputDir = (forward * input.y + right * input.x);
+        inputDir.Normalize();
 
         Vector3 currentVel = rb.linearVelocity;
-        Vector3 horizontalVel = new Vector3(currentVel.x, 0, currentVel.z);
+        Vector3 targetHorizontal = inputDir * moveSpeed;
 
-        horizontalVel = Vector3.SmoothDamp(
-            horizontalVel,
-            targetVelocity,
-            ref velocitySmoothRef,
-            (inputDir.magnitude > 0.1f) ? (1f / acceleration) : (1f / deceleration)
-        );
+        if (!isGrounded)
+            targetHorizontal *= airControlMultiplier;
+
+        Vector3 currentHorizontal = new Vector3(currentVel.x, 0f, currentVel.z);
+
+        float smoothTime = (inputDir.sqrMagnitude > 0.001f) ? (1f / acceleration) : (1f / deceleration);
+        Vector3 horizontalVel = Vector3.SmoothDamp(currentHorizontal, targetHorizontal, ref velocitySmoothRef, smoothTime);
 
         rb.linearVelocity = new Vector3(horizontalVel.x, currentVel.y, horizontalVel.z);
 
-        if (inputDir.magnitude > 0.1f)
+        if (inputDir.sqrMagnitude > 0.001f)
         {
             Quaternion targetRot = Quaternion.LookRotation(inputDir);
-            transform.rotation = Quaternion.Slerp(transform.rotation, targetRot, Time.deltaTime * 10f);
+            transform.rotation = Quaternion.Slerp(transform.rotation, targetRot, Time.deltaTime * rotationSpeed);
         }
     }
 
     void HandleJump()
     {
-        if (Input.GetButtonDown("Jump") && isGrounded)
+        if (isDashing)
+            return;
+
+        bool canUseCoyote = Time.time - lastGroundedTime <= coyoteTime;
+        bool bufferedJump = Time.time - lastJumpPressedTime <= jumpBufferTime;
+
+        if (bufferedJump && canUseCoyote)
         {
             Vector3 vel = rb.linearVelocity;
             vel.y = 0f;
             rb.linearVelocity = vel;
 
             rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
+
+            lastJumpPressedTime = -999f;
+            lastGroundedTime = -999f;
+            isGrounded = false;
+        }
+    }
+
+    void HandleDash()
+    {
+        if (isDashing || !canDash)
+            return;
+
+        if (Input.GetKeyDown(dashKey))
+        {
+            StartCoroutine(DashRoutine());
         }
     }
 
@@ -145,37 +240,20 @@ public class PlayerMovement : MonoBehaviour
 
         Vector3 dashDir = transform.forward;
         dashDir.y = 0f;
+        if (dashDir.sqrMagnitude < 0.001f)
+            dashDir = transform.forward;
         dashDir.Normalize();
 
-        float elapsed = 0f;
+        float dashSpeed = dashDistance / dashDuration;
+        float startTime = Time.time;
 
-        Vector3 startPos = rb.position;
-        Vector3 targetPos = startPos + dashDir * dashDistance;
-
-        float originalDrag = rb.linearDamping;
-        rb.linearDamping = 0f;
-
-        while (elapsed < dashDuration)
+        while (Time.time < startTime + dashDuration)
         {
-            float t = elapsed / dashDuration;
-
-            float eased = Mathf.SmoothStep(0f, 1f, t);
-
-            Vector3 newPos = Vector3.Lerp(startPos, targetPos, eased);
-
-            newPos.y = rb.position.y;
-
-            rb.MovePosition(newPos);
-
-            elapsed += Time.deltaTime;
+            Vector3 vel = rb.linearVelocity;
+            vel = dashDir * dashSpeed;
+            rb.linearVelocity = vel;
             yield return null;
         }
-
-        Vector3 finalPos = targetPos;
-        finalPos.y = rb.position.y;
-        rb.MovePosition(finalPos);
-
-        rb.linearDamping = originalDrag;
 
         if (dashBroadcaster != null)
         {
@@ -190,12 +268,13 @@ public class PlayerMovement : MonoBehaviour
         canDash = true;
     }
 
-
     public void ApplyKnockback(Vector3 direction, float force)
     {
         Rigidbody rb = GetComponent<Rigidbody>();
         if (rb == null) return;
 
+        direction.y = 0f;
+        direction.Normalize();
         rb.AddForce(direction.normalized * force, ForceMode.Impulse);
     }
 
@@ -216,7 +295,7 @@ public class PlayerMovement : MonoBehaviour
 
         Vector3 dir = other.transform.position - transform.position;
         dir.y = 0f;
-        dir = dir.normalized;
+        dir.Normalize();
 
         int dmg = 1;
         if (playerStats != null)
@@ -229,6 +308,4 @@ public class PlayerMovement : MonoBehaviour
             enemyHealth.TakeDamage(dmg, knockDir);
         }
     }
-
-
 }
