@@ -558,6 +558,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   abilityManager: {fileID: 0}
   allUpgrades: []
+  toastedEdgeBase: {fileID: 11400000, guid: 8390bcf7f8896a045ba911d2e43679f5, type: 2}
+  toastedEdgeStack: {fileID: 11400000, guid: 630c2fb633d131241bde2f11670fbbf5, type: 2}
 --- !u!4 &147207979
 Transform:
   m_ObjectHideFlags: 0

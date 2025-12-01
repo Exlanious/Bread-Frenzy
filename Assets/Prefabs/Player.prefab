@@ -453,6 +453,10 @@ MonoBehaviour:
   hideWhenFull: 0
   debugLogs: 0
   invincibilityDuration: 0.5
+  playerRenderer: {fileID: 0}
+  hurtFlashColor: {r: 1, g: 0, b: 0, a: 1}
+  flashSpeed: 20
+  hitstopDuration: 0.05
 --- !u!114 &7398132229108156665
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -496,6 +500,10 @@ MonoBehaviour:
   playerStats: {fileID: 6498540831953964109}
   slashPrefab: {fileID: 6277541695491469613, guid: 75511794883665b458842b86d526d08b, type: 3}
   slashSpawnDistance: 1.5
+  projectilePrefab: {fileID: 2713655323089777111, guid: 293d0bbcbc97cc645b7c85307e27042e, type: 3}
+  projectileSpeed: 15
+  projectileLifetime: 3
+  projectileSpreadAngle: 10
 --- !u!114 &6498540831953964109
 MonoBehaviour:
   m_ObjectHideFlags: 0

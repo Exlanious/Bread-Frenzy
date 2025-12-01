@@ -8,10 +8,12 @@ public class PlayerStats : MonoBehaviour
 
     public bool hasProjectile = false;
     public int projectileCount = 0;
+    public float baseKnockback = 8f;  
 
     [Header("Current Final Stats (computed)")]
     public float damage;
     public float radius;
+    public float knockback;
 
     public void RecomputeStats(
         float bonusDamageAdd,
@@ -19,10 +21,13 @@ public class PlayerStats : MonoBehaviour
         float bonusRadiusAdd,
         float bonusRadiusMult,
         bool unlockProj,
-        int projCountIncrease)
+        int projCountIncrease,
+        float bonusKnockbackAdd
+    )
     {
         damage = (baseDamage + bonusDamageAdd) * bonusDamageMult;
         radius = (baseRadius + bonusRadiusAdd) * bonusRadiusMult;
+        knockback = baseKnockback + bonusKnockbackAdd;
 
         if (unlockProj)
             hasProjectile = true;
@@ -39,7 +44,8 @@ public class PlayerStats : MonoBehaviour
             bonusRadiusAdd: 0f,
             bonusRadiusMult: 1f,
             unlockProj: false,
-            projCountIncrease: 0
+            projCountIncrease: 0,
+            bonusKnockbackAdd: 0f
         );
     }
 }

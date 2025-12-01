@@ -25,7 +25,11 @@ public class PlayerAttack : MonoBehaviour
     [Header("Slash Prefab")]
     public GameObject slashPrefab;
     public float slashSpawnDistance = 1.5f;
-
+    [Header("Projectile Settings")]
+    public GameObject projectilePrefab;
+    public float projectileSpeed = 15f;
+    public float projectileLifetime = 3f;
+    public float projectileSpreadAngle = 10f;
 
     // Internal state
     private bool isAttacking;
@@ -89,6 +93,38 @@ public class PlayerAttack : MonoBehaviour
 
         slashInstance.transform.localScale *= radiusMult;
 
+        if (playerStats != null && playerStats.hasProjectile && projectilePrefab != null)
+        {
+            int count = Mathf.Max(1, playerStats.projectileCount);
+
+            for (int i = 0; i < count; i++)
+            {
+                float spread = projectileSpreadAngle;
+                float t = (count == 1) ? 0f : (i / (float)(count - 1) - 0.5f);
+                float angleOffset = t * spread;
+
+                Quaternion projRot = Quaternion.AngleAxis(angleOffset, Vector3.up) * spawnRot;
+
+                GameObject projObj = Instantiate(projectilePrefab, spawnPos, projRot);
+
+                Projectile proj = projObj.GetComponent<Projectile>();
+                if (proj != null)
+                {
+                    int dmg = 1;
+                    if (playerStats != null)
+                        dmg = Mathf.Max(1, Mathf.RoundToInt(playerStats.damage));
+
+                    proj.Initialize(
+                        owner: transform,
+                        damage: dmg,
+                        speed: projectileSpeed,
+                        lifetime: projectileLifetime,
+                        hittableLayers: hittableLayers
+                    );
+                }
+            }
+        }
+
         CollisionBroadcaster broadcaster = slashInstance.GetComponent<CollisionBroadcaster>();
         if (broadcaster != null)
         {
@@ -127,7 +163,8 @@ public class PlayerAttack : MonoBehaviour
             if (playerStats != null)
                 dmg = Mathf.Max(1, Mathf.RoundToInt(playerStats.damage));
 
-            enemyHealth.TakeDamage(dmg, dir); 
+            float kb = playerStats.knockback;
+            enemyHealth.TakeDamage(dmg, dir * kb); 
         }
     }
 
