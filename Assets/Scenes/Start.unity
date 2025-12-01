@@ -1038,13 +1038,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ccbabcedc4bc5b74aae00758df3e231e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  sceneToLoad: Main
+  sceneToLoad: Main_Terrain
   useAnyKey: 1
   specificKey: 13
   inputDelay: 0.5
   fadeCanvasGroup: {fileID: 611649560}
   fadeDuration: 0.6
   fadeInOnStart: 1
+  disableFadePanelAfterFadeIn: 1
 --- !u!4 &2063615081
 Transform:
   m_ObjectHideFlags: 0

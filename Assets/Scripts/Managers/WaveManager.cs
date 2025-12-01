@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -24,6 +25,8 @@ public class Wave
 
 public class WaveManager : MonoBehaviour
 {
+    public event Action<Wave, int> OnWaveStarted;
+
     [Header("Endless Wave Settings")]
     [Tooltip("Base enemy count for the very first combat wave.")]
     public int startingEnemyCount = 3;
@@ -133,15 +136,16 @@ public class WaveManager : MonoBehaviour
 
         currentWave = GenerateWave(currentWaveNumber);
 
+        OnWaveStarted?.Invoke(currentWave, currentWaveNumber);
+
         Debug.Log($"[WaveManager] Preparing {currentWave.waveName} (Wave {currentWaveNumber}, {currentWave.waveType})");
 
-        // BREAK WAVE: no enemies, just chill
         if (currentWave.waveType == WaveType.Break)
         {
             waveActive = false;
             enemiesAlive = 0;
 
-            Debug.Log("[WaveManager] Break wave — no enemies. Player can breathe.");
+            Debug.Log("[WaveManager] Break wave ï¿½ no enemies. Player can breathe.");
 
             if (playerHealth != null && breakWaveHealAmount > 0)
             {
@@ -158,7 +162,6 @@ public class WaveManager : MonoBehaviour
         }
 
 
-        // COMBAT WAVES
         waveActive = true;
         enemiesAlive = 0;
 
@@ -186,14 +189,10 @@ public class WaveManager : MonoBehaviour
         Debug.Log("[WaveManager] Finished spawning for this wave.");
     }
 
-    // ------------------------------------------------------------------
-    // Procedural wave generator
-    // ------------------------------------------------------------------
     private Wave GenerateWave(int waveNumber)
     {
         Wave wave = new Wave();
 
-        // figure out type based on cadence (Boss > MiniBoss > Break > Power > Normal)
         bool isBoss = bossEvery > 0 && waveNumber % bossEvery == 0;
         bool isMiniBoss = miniBossEvery > 0 && waveNumber % miniBossEvery == 0;
         bool isBreak = breakEvery > 0 && waveNumber % breakEvery == 0;
@@ -220,7 +219,6 @@ public class WaveManager : MonoBehaviour
             wave.waveType = WaveType.Normal;
         }
 
-        // Now define enemyCount + spawnInterval based on type
         switch (wave.waveType)
         {
             case WaveType.Break:
@@ -243,7 +241,6 @@ public class WaveManager : MonoBehaviour
 
             case WaveType.Power:
                 wave.waveName = "Power Wave";
-                // Lots of weaker enemies to shred
                 int powerCount = Mathf.RoundToInt(currentBaseEnemyCount * 1.6f);
                 wave.enemyCount = Mathf.Max(8, powerCount);
                 wave.spawnInterval = Mathf.Max(minSpawnInterval, currentSpawnInterval * 0.6f);
@@ -253,9 +250,8 @@ public class WaveManager : MonoBehaviour
             default:
                 wave.waveName = $"Wave {waveNumber}";
 
-                // A bit of randomness around the base count
                 int variation = Mathf.RoundToInt(currentBaseEnemyCount * 0.25f);
-                int randomOffset = Random.Range(-variation, variation + 1);
+                int randomOffset = UnityEngine.Random.Range(-variation, variation + 1);
                 int normalCount = currentBaseEnemyCount + randomOffset;
 
                 wave.enemyCount = Mathf.Max(2, normalCount);
@@ -263,8 +259,7 @@ public class WaveManager : MonoBehaviour
                 break;
         }
 
-        // After defining this wave, update base count & spawn interval for the NEXT one
-        if (wave.waveType != WaveType.Break) // breaks don't grow the curve
+        if (wave.waveType != WaveType.Break)
         {
             currentBaseEnemyCount = Mathf.RoundToInt(currentBaseEnemyCount * enemyCountGrowth);
             currentSpawnInterval = Mathf.Max(minSpawnInterval, currentSpawnInterval * spawnIntervalDecay);
@@ -273,9 +268,6 @@ public class WaveManager : MonoBehaviour
         return wave;
     }
 
-    // ------------------------------------------------------------------
-    // Scaling enemies per wave + player level
-    // ------------------------------------------------------------------
     private void ApplyWaveModifiersToEnemy(GameObject enemy, Wave wave)
     {
         EnemyHealth health = enemy.GetComponent<EnemyHealth>();
@@ -286,7 +278,6 @@ public class WaveManager : MonoBehaviour
         int playerLevel = (playerXP != null) ? Mathf.Max(1, playerXP.level) : 1;
         int levelsAboveOne = Mathf.Max(0, playerLevel - 1);
 
-        // Base multipliers
         float healthMult = 1f
             + (currentWaveNumber - 1) * healthPerWave
             + levelsAboveOne * healthPerLevel;
@@ -299,11 +290,9 @@ public class WaveManager : MonoBehaviour
             + (currentWaveNumber - 1) * speedPerWave
             + levelsAboveOne * speedPerLevel;
 
-        // Adjust based on wave type
         switch (wave.waveType)
         {
             case WaveType.Power:
-                // Let the player feel busted
                 healthMult *= 0.5f;
                 damageMult *= 0.8f;
                 speedMult *= 0.9f;
@@ -324,11 +313,9 @@ public class WaveManager : MonoBehaviour
                 break;
         }
 
-        // Apply to components
         if (health != null)
         {
             health.maxHealth = Mathf.Max(1, Mathf.RoundToInt(health.maxHealth * healthMult));
-            // EnemyHealth.Start() will copy maxHealth into currentHealth on spawn.
         }
 
         if (attack != null)
@@ -343,15 +330,11 @@ public class WaveManager : MonoBehaviour
         }
     }
 
-    // ------------------------------------------------------------------
-    // Enemy lifecycle & wave completion
-    // ------------------------------------------------------------------
     private void HandleEnemyDied(EnemyHealth health)
     {
         health.OnEnemyDied -= HandleEnemyDied;
         enemiesAlive--;
 
-        // Count this enemy as defeated
         if (RunStats.Instance != null)
         {
             RunStats.Instance.RegisterEnemyDefeated();

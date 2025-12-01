@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dc57c9711dcb3c847baa734de5ae9a51, type: 3}
   m_Name: UPG_StrongerSword
   m_EditorClassIdentifier: 
-  upgradeName: Stronger Sword
-  description: Increase sword damage.
+  upgradeName: Stale as Steel
+  description: Your baguette hardens into a crusty, high-impact weapon.
   icon: {fileID: 0}
   modifiers:
   - statType: 0

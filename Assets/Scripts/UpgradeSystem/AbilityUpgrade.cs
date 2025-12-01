@@ -7,15 +7,16 @@ public enum StatType
     RadiusAdd,
     RadiusMultiplier,
     UnlockProjectile,
-    ProjectileCountAdd
-    // You can add MoveSpeed, AttackSpeed, etc later
+    ProjectileCountAdd,
+    KnockbackAdd,
+    HpRegenAdd
 }
 
 [System.Serializable]
 public class StatModifier
 {
     public StatType statType;
-    public float value;   // meaning depends on statType (add, mult, etc.)
+    public float value;   
 }
 
 [CreateAssetMenu(fileName = "NewUpgrade", menuName = "Upgrades/AbilityUpgrade")]

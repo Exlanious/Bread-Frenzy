@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dc57c9711dcb3c847baa734de5ae9a51, type: 3}
   m_Name: UPG_BiggerSword
   m_EditorClassIdentifier: 
-  upgradeName: Bigger Sword
-  description: Increase sword radius.
+  upgradeName: Overproofed
+  description: "Your baguette rises a little too much\u2026 and gets bigger."
   icon: {fileID: 0}
   modifiers:
   - statType: 2

@@ -38,7 +38,7 @@ public class EnemyMoveAI : MonoBehaviour
         if (agent == null) agent = GetComponent<NavMeshAgent>();
         if (rigidBody == null) rigidBody = GetComponent<Rigidbody>();
 
-        agent.stoppingDistance = 0f;       
+        agent.stoppingDistance = 0f;
     }
 
     void Update()
@@ -84,6 +84,26 @@ public class EnemyMoveAI : MonoBehaviour
             agent.isStopped = false;
     }
 
+    public void SetPhysicsMode(bool usePhysics)
+    {
+        if (usePhysics)
+        {
+            agent.enabled = false;
+
+            rigidBody.isKinematic = false;
+            rigidBody.useGravity = true;
+        }
+        else
+        {
+            rigidBody.isKinematic = true;
+            rigidBody.useGravity = false;
+
+            agent.enabled = true;
+            agent.ResetPath();
+        }
+    }
+
+    /*
     public void Teleport(Vector3 targetPosition)
     {
         StartCoroutine(TeleportResolveCoroutine(targetPosition));
@@ -121,6 +141,8 @@ public class EnemyMoveAI : MonoBehaviour
         agent.Warp(transform.position);
         agent.enabled = true;
     }
+
+    */
 
     private void OnDrawGizmosSelected()
     {
