@@ -1,5 +1,6 @@
 using UnityEngine;
 using System;
+using System.Collections;
 
 public class PlayerHealth : MonoBehaviour
 {
@@ -20,6 +21,14 @@ public class PlayerHealth : MonoBehaviour
     public float invincibilityDuration = 0.5f;   
     private float lastDamageTime = -999f;
 
+    [Header("Feedback")]
+    public Renderer playerRenderer;
+    public Color hurtFlashColor = Color.red;
+    public float flashSpeed = 20f;
+    public float hitstopDuration = 0.05f;
+
+    private bool flashing = false;
+    private bool inHitstop = false;
 
     public event Action OnPlayerDied;
     public event Action<int, int> OnHealthChanged;
@@ -36,7 +45,12 @@ public class PlayerHealth : MonoBehaviour
 
         lastDamageTime = Time.time;
 
-        // Track damage taken for this run
+        if (!flashing)
+            StartCoroutine(FlashRoutine());
+
+        if (!inHitstop)
+            StartCoroutine(HitstopRoutine());
+
         if (RunStats.Instance != null && amount > 0)
         {
             RunStats.Instance.RegisterDamageTaken(amount);
@@ -58,6 +72,36 @@ public class PlayerHealth : MonoBehaviour
         UpdateHealthBar();
     }
 
+    private IEnumerator FlashRoutine()
+    {
+        if (playerRenderer == null || playerRenderer.material == null)
+            yield break;
+
+        flashing = true;
+
+        Color originalColor = playerRenderer.material.color;
+
+        while (Time.time - lastDamageTime < invincibilityDuration)
+        {
+            float t = Mathf.Sin(Time.time * flashSpeed) * 0.5f + 0.5f;
+            playerRenderer.material.color = Color.Lerp(originalColor, hurtFlashColor, t);
+            yield return null;
+        }
+
+        playerRenderer.material.color = originalColor;
+        flashing = false;
+    }
+
+    private IEnumerator HitstopRoutine()
+    {
+        inHitstop = true;
+        float originalTimeScale = Time.timeScale;
+        Time.timeScale = 0f;
+        yield return new WaitForSecondsRealtime(hitstopDuration);
+        Time.timeScale = originalTimeScale;
+        inHitstop = false;
+    }
+
     private void Die()
     {
         if (debugLogs)
@@ -66,9 +110,6 @@ public class PlayerHealth : MonoBehaviour
         OnPlayerDied?.Invoke();
     }
 
-    // ---------------------------------------------------------------
-    // HEALTH CONTROL
-    // ---------------------------------------------------------------
     public void ResetHealth()
     {
         currentHealth = maxHealth;
@@ -83,9 +124,6 @@ public class PlayerHealth : MonoBehaviour
         UpdateHealthBar();
     }
 
-    // ---------------------------------------------------------------
-    // UI UPDATE
-    // ---------------------------------------------------------------
     private void UpdateHealthBar()
     {
         if (healthBar == null) return;

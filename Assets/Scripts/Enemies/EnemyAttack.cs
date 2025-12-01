@@ -3,66 +3,115 @@ using UnityEngine;
 public class EnemyAttack : MonoBehaviour
 {
     [Header("Target")]
-    public Transform player; // will be auto-filled
+    public Transform player; 
+    protected PlayerHealth playerHealth;
 
     [Header("Attack Settings")]
     public int damage = 1;
-    public float attackCooldown = 0.5f;
+    public float attackCooldown = 0.8f;
 
-    // Make this a bit larger than EnemyMoveAI.stopDistance (1.5f)
-    public float attackRange = 2.0f;
+    public float attackRange = 1.6f;
+
+    [Header("Attack Timing (no anims)")]
+    [Tooltip("How long the enemy 'winds up' before the hit check.")]
+    public float windupTime = 0.25f;
+
+    [Tooltip("Small window where damage can happen once if you're still in range.")]
+    public float hitWindow = 0.1f;
 
     protected float lastAttackTime = -999f;
-    protected PlayerHealth playerHealth;
+    protected bool isAttacking = false;
+
+    [Header("Optional Visual Telegraph")]
+    [Tooltip("Renderer to tint during windup (optional).")]
+    public Renderer telegraphRenderer;
+    public Color telegraphColor = new Color(1f, 0.3f, 0.3f, 1f);
+
+    private Color _originalColor;
+    private bool _hasOriginalColor = false;
 
     protected void Awake()
     {
-        // Try to find the player health in the scene
         playerHealth = FindObjectOfType<PlayerHealth>();
-
         if (playerHealth != null)
-        {
             player = playerHealth.transform;
-            Debug.Log($"[EnemyAttack:{name}] Found PlayerHealth on {playerHealth.gameObject.name}");
-        }
-        else
+
+        if (telegraphRenderer != null && telegraphRenderer.material != null)
         {
-            Debug.LogError($"[EnemyAttack:{name}] No PlayerHealth found in scene. Enemy cannot attack.");
+            _originalColor = telegraphRenderer.material.color;
+            _hasOriginalColor = true;
         }
     }
 
     protected void Update()
     {
-        if (player == null || playerHealth == null)
-            return;
+        if (player == null || playerHealth == null) return;
 
         float distance = Vector3.Distance(transform.position, player.position);
 
-        // Debug distance so we see if ducks ever count as "close"
-        // (Comment this out later if too spammy)
-        // Debug.Log($"[EnemyAttack:{name}] Distance to player: {distance}");
-
-        if (distance <= attackRange)
+        if (!isAttacking &&
+            distance <= attackRange &&
+            Time.time - lastAttackTime >= attackCooldown)
         {
-            // We are in attack range � this should definitely show up
-            Debug.Log($"[EnemyAttack:{name}] Player in range ({distance:F2}). Trying to attack.");
-            TryAttackPlayer();
+            StartCoroutine(AttackRoutine());
         }
     }
 
-    protected void TryAttackPlayer()
+    private System.Collections.IEnumerator AttackRoutine()
     {
-        if (playerHealth == null) return;
+        isAttacking = true;
 
-        if (Time.time - lastAttackTime >= attackCooldown)
+        float t = 0f;
+
+        if (telegraphRenderer != null && _hasOriginalColor)
         {
-            Debug.Log($"[EnemyAttack:{name}] Attacking player for {damage} damage.");
-            playerHealth.TakeDamage(damage);  // This calls your PlayerHealth logic :contentReference[oaicite:1]{index=1}
-            lastAttackTime = Time.time;
+            telegraphRenderer.material.color = telegraphColor;
         }
+
+        while (t < windupTime)
+        {
+            t += Time.deltaTime;
+
+            if (player != null)
+            {
+                Vector3 lookTarget = new Vector3(player.position.x, transform.position.y, player.position.z);
+                transform.LookAt(lookTarget);
+            }
+
+            yield return null;
+        }
+
+        bool hasHit = false;
+        float hitT = 0f;
+
+        while (hitT < hitWindow)
+        {
+            hitT += Time.deltaTime;
+
+            if (!hasHit && playerHealth != null && player != null)
+            {
+                float distance = Vector3.Distance(transform.position, player.position);
+                if (distance <= attackRange)
+                {
+                    Debug.Log($"[EnemyAttack:{name}] Attacking player for {damage} damage.");
+                    playerHealth.TakeDamage(damage);
+                    hasHit = true;
+                }
+            }
+
+            yield return null;
+        }
+
+        lastAttackTime = Time.time;
+
+        if (telegraphRenderer != null && _hasOriginalColor)
+        {
+            telegraphRenderer.material.color = _originalColor;
+        }
+
+        isAttacking = false;
     }
 
-    // Optional: visualize the attack radius in Scene view
     private void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.red;

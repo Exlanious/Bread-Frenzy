@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
@@ -9,12 +10,15 @@ public class UpgradeSelector : MonoBehaviour
     [SerializeField] private Transform cardCanvas;
     [SerializeField] private Button SkipButton;
     [SerializeField] private Image backgroundImage; 
+    [SerializeField] private CanvasGroup uiCanvasGroup;  
 
     [Header("Card Styling")]
     [SerializeField] private TMP_FontAsset upgradeFont;
 
     [Header("Settings")]
     [SerializeField] private int numGeneratedCards = 3;
+    [SerializeField] private float fadeDuration = 0.18f;          
+    [SerializeField] private float clickDelayAfterFade = 0.05f;    
 
     [Header("Ability System")]
     [SerializeField] private AbilityUpgradeSelector abilitySelector;
@@ -24,6 +28,7 @@ public class UpgradeSelector : MonoBehaviour
     private bool isShowingUpgrade = false;
 
     private AbilityUpgrade[] currentOptions;
+    private Coroutine fadeRoutine;
 
     void Start()
     {
@@ -36,6 +41,9 @@ public class UpgradeSelector : MonoBehaviour
         if (backgroundImage == null)
             backgroundImage = GetComponent<Image>();
 
+        if (uiCanvasGroup == null)
+            uiCanvasGroup = GetComponent<CanvasGroup>();   
+
         if (SkipButton != null)
         {
             SkipButton.onClick.RemoveAllListeners();
@@ -45,10 +53,6 @@ public class UpgradeSelector : MonoBehaviour
         HideUI();
     }
 
-    /// <summary>
-    /// Called by PlayerXP when you level up.
-    /// Adds a pending upgrade choice and shows UI if not already showing.
-    /// </summary>
     public void QueueUpgrade()
     {
         upgradeQueue.Enqueue(1); 
@@ -93,7 +97,6 @@ public class UpgradeSelector : MonoBehaviour
         if (SkipButton != null)
             SkipButton.gameObject.SetActive(true);
 
-
         foreach (Transform child in cardCanvas)
             Destroy(child.gameObject);
 
@@ -105,7 +108,39 @@ public class UpgradeSelector : MonoBehaviour
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
 
-        Time.timeScale = 0f;
+        Time.timeScale = 0f;  
+
+        if (fadeRoutine != null)
+            StopCoroutine(fadeRoutine);
+
+        fadeRoutine = StartCoroutine(FadeInAndEnableRoutine());
+    }
+
+    private IEnumerator FadeInAndEnableRoutine()
+    {
+        if (uiCanvasGroup == null)
+            yield break;
+
+        uiCanvasGroup.alpha = 0f;
+        uiCanvasGroup.interactable = false;
+        uiCanvasGroup.blocksRaycasts = false;
+
+        float t = 0f;
+
+        while (t < fadeDuration)
+        {
+            t += Time.unscaledDeltaTime;
+            float normalized = Mathf.Clamp01(t / fadeDuration);
+            uiCanvasGroup.alpha = normalized;
+            yield return null;
+        }
+
+        if (clickDelayAfterFade > 0f)
+            yield return new WaitForSecondsRealtime(clickDelayAfterFade);
+
+        uiCanvasGroup.alpha = 1f;
+        uiCanvasGroup.interactable = true;
+        uiCanvasGroup.blocksRaycasts = true;
     }
 
     private void CreateUpgradeCard(AbilityUpgrade upgrade, int index)
@@ -151,7 +186,6 @@ public class UpgradeSelector : MonoBehaviour
         int capturedIndex = index;
         button.onClick.AddListener(() => OnUpgradeSelected(capturedIndex));
     }
-
 
     private void OnUpgradeSelected(int optionIndex)
     {
@@ -204,5 +238,12 @@ public class UpgradeSelector : MonoBehaviour
 
         if (SkipButton != null)
             SkipButton.gameObject.SetActive(false);
+
+        if (uiCanvasGroup != null)
+        {
+            uiCanvasGroup.alpha = 0f;
+            uiCanvasGroup.interactable = false;
+            uiCanvasGroup.blocksRaycasts = false;
+        }
     }
 }
