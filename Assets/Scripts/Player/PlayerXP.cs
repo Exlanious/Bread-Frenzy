@@ -99,31 +99,16 @@ public class PlayerXP : MonoBehaviour
     private void LevelUp()
     {
         level++;
-        Debug.Log($"LEVEL UP! New level: {level}");
 
         xpToNextLevel = Mathf.RoundToInt(xpToNextLevel * xpGrowthFactor);
 
-        bool shouldGrantUpgrade = false;
-
-        if (level <= 3)
+        if (upgradeUI != null)
         {
-            shouldGrantUpgrade = true;
+            upgradeUI.QueueUpgrade();
         }
-        else if ((level % 2) == 1)
+        else
         {
-            shouldGrantUpgrade = true;
-        }
-
-        if (shouldGrantUpgrade)
-        {
-            if (upgradeUI != null)
-            {
-                upgradeUI.QueueUpgrade();
-            }
-            else
-            {
-                Debug.LogWarning("PlayerXP: upgradeUI is null, cannot show upgrade choices.");
-            }
+            Debug.LogWarning("PlayerXP: upgradeUI is null, cannot show upgrade choices.");
         }
 
         UpdateXPUI();
