@@ -108,7 +108,7 @@ public class UpgradeSelector : MonoBehaviour
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
 
-        Time.timeScale = 0f;  
+        PauseManager.SetPaused(PauseSource.LevelUp, true);
 
         if (fadeRoutine != null)
             StopCoroutine(fadeRoutine);
@@ -223,7 +223,7 @@ public class UpgradeSelector : MonoBehaviour
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
 
-        Time.timeScale = 1f;
+        PauseManager.SetPaused(PauseSource.LevelUp, false);
 
         TryShowNextUpgrade();
     }

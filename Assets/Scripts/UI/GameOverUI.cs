@@ -68,7 +68,7 @@ public class GameOverUI : MonoBehaviour
             gameOverPanel.SetActive(true);
 
         if (pauseOnGameOver)
-            Time.timeScale = 0f;
+            PauseManager.SetPaused(PauseSource.GameOver, true);
 
         Cursor.visible = true;
         Cursor.lockState = CursorLockMode.None;
@@ -76,7 +76,7 @@ public class GameOverUI : MonoBehaviour
 
     public void Restart()
     {
-        Time.timeScale = 1f;
+        PauseManager.SetPaused(PauseSource.GameOver, false);
 
         if (RunStats.Instance != null)
         {

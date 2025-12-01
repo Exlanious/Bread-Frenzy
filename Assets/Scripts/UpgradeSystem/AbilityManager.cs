@@ -29,7 +29,8 @@ public class AbilityManager : MonoBehaviour
         bool projectileUnlocked = false;
         int projectileCountAdd = 0;
 
-        float bonusKnockbackAdd = 0f;
+        float totalKnockbackAdd = 0f;
+        float totalRegenAdd = 0f;
 
         foreach (var kvp in stacks)
         {
@@ -65,8 +66,13 @@ public class AbilityManager : MonoBehaviour
                     case StatType.ProjectileCountAdd:
                         projectileCountAdd += Mathf.RoundToInt(mod.value * stackCount);
                         break;
+
                     case StatType.KnockbackAdd:
-                        bonusKnockbackAdd += mod.value;
+                        totalKnockbackAdd += mod.value;
+                        break;
+                    
+                    case StatType.HpRegenAdd:
+                        totalRegenAdd += mod.value;
                         break;
                 }
             }
@@ -79,7 +85,8 @@ public class AbilityManager : MonoBehaviour
             totalRadiusMult,
             projectileUnlocked,
             projectileCountAdd,
-            bonusKnockbackAdd
+            totalKnockbackAdd,
+            totalRegenAdd
         );
     }
     

@@ -1,13 +1,18 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+[System.Serializable]
+public struct UpgradePair
+{
+    public AbilityUpgrade baseUpgrade;
+    public AbilityUpgrade stackUpgrade;
+}
+
 public class AbilityUpgradeSelector : MonoBehaviour
 {
     public AbilityManager abilityManager;
     public AbilityUpgrade[] allUpgrades;
-    public AbilityUpgrade toastedEdgeBase;   
-    public AbilityUpgrade toastedEdgeStack; 
-
+    public UpgradePair[] upgradePairs;
 
     void Awake()
     {
@@ -26,27 +31,46 @@ public class AbilityUpgradeSelector : MonoBehaviour
                 Debug.LogError("AbilityUpgradeSelector: No AbilityUpgrade assets found in Resources/Upgrades!");
         }
     }
-    
+
     public AbilityUpgrade[] GetRandomOptions(int count)
     {
         if (allUpgrades == null || allUpgrades.Length == 0)
             return new AbilityUpgrade[0];
 
-        bool hasToastedBase = false;
-        if (abilityManager != null && toastedEdgeBase != null)
-        {
-            hasToastedBase = abilityManager.HasUpgrade(toastedEdgeBase);
-        }
-
         List<AbilityUpgrade> pool = new List<AbilityUpgrade>();
+
         foreach (var upg in allUpgrades)
         {
-            if (upg == null) continue;
-
-            if (upg == toastedEdgeBase && hasToastedBase)
+            if (upg == null)
                 continue;
 
-            if (upg == toastedEdgeStack && !hasToastedBase)
+            bool filtered = false;
+
+            if (abilityManager != null && upgradePairs != null)
+            {
+                for (int i = 0; i < upgradePairs.Length; i++)
+                {
+                    var pair = upgradePairs[i];
+                    if (pair.baseUpgrade == null && pair.stackUpgrade == null)
+                        continue;
+
+                    bool hasBase = pair.baseUpgrade != null && abilityManager.HasUpgrade(pair.baseUpgrade);
+
+                    if (upg == pair.baseUpgrade && hasBase)
+                    {
+                        filtered = true;
+                        break;
+                    }
+
+                    if (upg == pair.stackUpgrade && !hasBase)
+                    {
+                        filtered = true;
+                        break;
+                    }
+                }
+            }
+
+            if (filtered)
                 continue;
 
             pool.Add(upg);

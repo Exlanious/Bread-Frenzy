@@ -8,7 +8,8 @@ public enum StatType
     RadiusMultiplier,
     UnlockProjectile,
     ProjectileCountAdd,
-    KnockbackAdd
+    KnockbackAdd,
+    HpRegenAdd
 }
 
 [System.Serializable]

@@ -558,8 +558,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   abilityManager: {fileID: 0}
   allUpgrades: []
-  toastedEdgeBase: {fileID: 11400000, guid: 8390bcf7f8896a045ba911d2e43679f5, type: 2}
-  toastedEdgeStack: {fileID: 11400000, guid: 630c2fb633d131241bde2f11670fbbf5, type: 2}
+  upgradePairs:
+  - baseUpgrade: {fileID: 11400000, guid: 8390bcf7f8896a045ba911d2e43679f5, type: 2}
+    stackUpgrade: {fileID: 11400000, guid: 630c2fb633d131241bde2f11670fbbf5, type: 2}
+  - baseUpgrade: {fileID: 11400000, guid: 89eeabf68fd9af8468964b49521e65d6, type: 2}
+    stackUpgrade: {fileID: 11400000, guid: 9e34904890597b947b4dc6fca6f4d440, type: 2}
+  - baseUpgrade: {fileID: 11400000, guid: 64eaded13f4d2dd4aaaf4458f010e97a, type: 2}
+    stackUpgrade: {fileID: 11400000, guid: 73fa0b2ce5da6b54b9c8459d248727ff, type: 2}
 --- !u!4 &147207979
 Transform:
   m_ObjectHideFlags: 0
@@ -747,6 +752,51 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 152964739}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!1 &158074883
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 158074885}
+  - component: {fileID: 158074884}
+  m_Layer: 0
+  m_Name: FPSLimiter
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &158074884
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 158074883}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a0d3a0b603ac2724389164693f3ad4b8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  targetFPS: 60
+--- !u!4 &158074885
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 158074883}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -16.558947, y: -14.1783695, z: 52.724403}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &177028847
 GameObject:
   m_ObjectHideFlags: 0
@@ -1097,6 +1147,17 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: -80}
   m_SizeDelta: {x: 1600, y: 700}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &263682954 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 1759244089320901357, guid: 0964ed6b2ed5194439fcf41c67eb1fee, type: 3}
+  m_PrefabInstance: {fileID: 1291387469}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ff5b474cd6f28344e82b2895de75dcf7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &290041361
 GameObject:
   m_ObjectHideFlags: 0
@@ -3084,6 +3145,7 @@ GameObject:
   - component: {fileID: 1109055319}
   - component: {fileID: 1109055318}
   - component: {fileID: 1109055322}
+  - component: {fileID: 1109055323}
   m_Layer: 5
   m_Name: Canvas
   m_TagString: Untagged
@@ -3198,6 +3260,18 @@ MonoBehaviour:
   damageValueText: {fileID: 1181520663}
   uiToHideOnGameOver:
   - {fileID: 357890434}
+--- !u!114 &1109055323
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1109055317}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aa968a9144bd9404a888e368b38bf050, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1181520661
 GameObject:
   m_ObjectHideFlags: 0
@@ -3354,10 +3428,34 @@ PrefabInstance:
       propertyPath: xpGrowthFactor
       value: 1.2
       objectReference: {fileID: 0}
+    - target: {fileID: 2239613870587023323, guid: 0964ed6b2ed5194439fcf41c67eb1fee, type: 3}
+      propertyPath: instantHealAmount
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3150594018771378875, guid: 0964ed6b2ed5194439fcf41c67eb1fee, type: 3}
+      propertyPath: playerStats
+      value: 
+      objectReference: {fileID: 2097408040}
+    - target: {fileID: 3150594018771378875, guid: 0964ed6b2ed5194439fcf41c67eb1fee, type: 3}
+      propertyPath: abilityManager
+      value: 
+      objectReference: {fileID: 1291387470}
+    - target: {fileID: 3150594018771378875, guid: 0964ed6b2ed5194439fcf41c67eb1fee, type: 3}
+      propertyPath: crustyDashBase
+      value: 
+      objectReference: {fileID: 11400000, guid: 89eeabf68fd9af8468964b49521e65d6, type: 2}
     - target: {fileID: 3150594018771378875, guid: 0964ed6b2ed5194439fcf41c67eb1fee, type: 3}
       propertyPath: cameraTransform
       value: 
       objectReference: {fileID: 1451877239}
+    - target: {fileID: 3150594018771378875, guid: 0964ed6b2ed5194439fcf41c67eb1fee, type: 3}
+      propertyPath: dashBroadcaster
+      value: 
+      objectReference: {fileID: 263682954}
+    - target: {fileID: 3150594018771378875, guid: 0964ed6b2ed5194439fcf41c67eb1fee, type: 3}
+      propertyPath: dashHittableLayers.m_Bits
+      value: 129
+      objectReference: {fileID: 0}
     - target: {fileID: 4500930653935993278, guid: 0964ed6b2ed5194439fcf41c67eb1fee, type: 3}
       propertyPath: m_Name
       value: Player
@@ -4791,6 +4889,17 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2064748908}
   m_CullTransparentMesh: 1
+--- !u!114 &2097408040 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 6498540831953964109, guid: 0964ed6b2ed5194439fcf41c67eb1fee, type: 3}
+  m_PrefabInstance: {fileID: 1291387469}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d14d0f39f7b09684d981e398bd80e894, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &2116070486
 GameObject:
   m_ObjectHideFlags: 0
@@ -5047,3 +5156,4 @@ SceneRoots:
   - {fileID: 908837679}
   - {fileID: 1821547365}
   - {fileID: 423990410}
+  - {fileID: 158074885}

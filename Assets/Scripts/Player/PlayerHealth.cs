@@ -95,10 +95,12 @@ public class PlayerHealth : MonoBehaviour
     private IEnumerator HitstopRoutine()
     {
         inHitstop = true;
-        float originalTimeScale = Time.timeScale;
-        Time.timeScale = 0f;
+
+        PauseManager.SetPaused(PauseSource.Hitstop, true);
+
         yield return new WaitForSecondsRealtime(hitstopDuration);
-        Time.timeScale = originalTimeScale;
+
+        PauseManager.SetPaused(PauseSource.Hitstop, false);
         inHitstop = false;
     }
 

@@ -10,11 +10,12 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: dc57c9711dcb3c847baa734de5ae9a51, type: 3}
-  m_Name: UPG_BiggerSword
+  m_Name: UPG_BakeryWarmth
   m_EditorClassIdentifier: 
-  upgradeName: Overproofed
-  description: "Your baguette rises a little too much\u2026 and gets bigger."
+  upgradeName: Bakery Warmth
+  description: Avoid damage for 10s to start regenerating health. Gain a small instant
+    heal and ongoing HP regen.
   icon: {fileID: 0}
   modifiers:
-  - statType: 2
-    value: 0.5
+  - statType: 7
+    value: 1

@@ -279,6 +279,7 @@ GameObject:
   - component: {fileID: 6498540831953964109}
   - component: {fileID: 7760741956113520244}
   - component: {fileID: 303807900617876326}
+  - component: {fileID: 2239613870587023323}
   m_Layer: 2
   m_Name: Player
   m_TagString: Player
@@ -305,6 +306,7 @@ Transform:
   - {fileID: 1055567929102702366}
   - {fileID: 760974324930424501}
   - {fileID: 4652424121413291564}
+  - {fileID: 5423179618821449549}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!33 &7678901058277870414
@@ -436,6 +438,16 @@ MonoBehaviour:
   dashDistance: 4
   dashDuration: 0.12
   dashCooldown: 0.4
+  abilityManager: {fileID: 0}
+  crustyDashBase: {fileID: 0}
+  playerStats: {fileID: 0}
+  dashBroadcaster: {fileID: 0}
+  dashHittableLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  dashDamageMultiplier: 1
+  dashExtraKnockbackMultiplier: 1.5
+  dashStunDuration: 0.2
 --- !u!114 &8099290484106084869
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -518,10 +530,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   baseDamage: 1
   baseRadius: 1
+  baseKnockback: 8
+  baseRegen: 0
   hasProjectile: 0
   projectileCount: 0
   damage: 0
   radius: 0
+  knockback: 0
+  regen: 0
 --- !u!114 &7760741956113520244
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -553,6 +569,24 @@ MonoBehaviour:
   xpGrowthFactor: 1.5
   upgradeUI: {fileID: 0}
   xpBarUI: {fileID: 0}
+--- !u!114 &2239613870587023323
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4500930653935993278}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 451e4cf6a0c458943a622a4aca63e726, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  playerStats: {fileID: 6498540831953964109}
+  playerHealth: {fileID: 8099290484106084869}
+  abilityManager: {fileID: 7760741956113520244}
+  bakeryWarmthBase: {fileID: 11400000, guid: 64eaded13f4d2dd4aaaf4458f010e97a, type: 2}
+  noDamageDuration: 10
+  instantHealAmount: 1
 --- !u!1 &5769394161550814593
 GameObject:
   m_ObjectHideFlags: 0
@@ -899,3 +933,69 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1.0000005, y: 1, z: 1.0000005}
   m_Center: {x: -0.000003814699, y: 0, z: -1.1368684e-13}
+--- !u!1 &8994751307251290310
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5423179618821449549}
+  - component: {fileID: 5066663792071126543}
+  - component: {fileID: 1759244089320901357}
+  m_Layer: 2
+  m_Name: DashHitbox
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5423179618821449549
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8994751307251290310}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0.5}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 7505426006019706227}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!65 &5066663792071126543
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8994751307251290310}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 1, y: 1, z: 1}
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &1759244089320901357
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8994751307251290310}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ff5b474cd6f28344e82b2895de75dcf7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 

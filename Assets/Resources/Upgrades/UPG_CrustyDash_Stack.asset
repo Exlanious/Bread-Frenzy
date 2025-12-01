@@ -10,11 +10,11 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: dc57c9711dcb3c847baa734de5ae9a51, type: 3}
-  m_Name: UPG_BiggerSword
+  m_Name: UPG_CrustyDash_Stack
   m_EditorClassIdentifier: 
-  upgradeName: Overproofed
-  description: "Your baguette rises a little too much\u2026 and gets bigger."
+  upgradeName: Crusty Dash
+  description: Your dash hits harder. +Damage
   icon: {fileID: 0}
   modifiers:
-  - statType: 2
+  - statType: 0
     value: 0.5

@@ -34,12 +34,11 @@ public class GameManager : MonoBehaviour
     {
         if (isPaused)
         {
-            Time.timeScale = 0f;
+            PauseManager.SetPaused(PauseSource.Menu, true);
         }
         else
         {
-            Time.timeScale = 1f;
+            PauseManager.SetPaused(PauseSource.Menu, false);
         }
     }
-    //place game wide logic here. 
 }
