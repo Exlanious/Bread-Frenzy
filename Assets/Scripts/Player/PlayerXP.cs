@@ -12,7 +12,13 @@ public class PlayerXP : MonoBehaviour
 
     [Header("References")]
     public UpgradeSelector upgradeUI;  
-    public XPBarUI xpBarUI;            
+    public XPBarUI xpBarUI;         
+
+    [Header("Level Scaling")]
+    public Transform playerModel;
+    public float scalePerLevel = 0.15f;  
+    public Vector3 baseScale = Vector3.one;
+   
 
     // Internal
     private int xpQueue = 0;           
@@ -40,6 +46,9 @@ public class PlayerXP : MonoBehaviour
     void Start()
     {
         UpdateXPUI();
+
+        if (playerModel != null)
+            baseScale = playerModel.localScale;
     }
 
     private void OnEnemyDied(int xpGained)
@@ -99,6 +108,7 @@ public class PlayerXP : MonoBehaviour
     private void LevelUp()
     {
         level++;
+        ApplyLevelScaling();
 
         xpToNextLevel = Mathf.RoundToInt(xpToNextLevel * xpGrowthFactor);
 
@@ -125,4 +135,32 @@ public class PlayerXP : MonoBehaviour
         if (xpBarUI != null)
             xpBarUI.SetXP(currentXPOverride, xpToNextLevel, level);
     }
+
+    private void ApplyLevelScaling()
+    {
+        if (playerModel == null) return;
+
+        float scaleMultiplier = 1f + (scalePerLevel * (level - 1));
+
+        Vector3 targetScale = baseScale * scaleMultiplier;
+
+        StartCoroutine(AnimateScale(targetScale));
+    }
+
+    private IEnumerator AnimateScale(Vector3 target)
+    {
+        Vector3 start = playerModel.localScale;
+        float t = 0f;
+        float duration = 0.35f;
+
+        while (t < duration)
+        {
+            t += Time.deltaTime;
+            playerModel.localScale = Vector3.Lerp(start, target, t / duration);
+            yield return null;
+        }
+
+        playerModel.localScale = target;
+    }
+
 }

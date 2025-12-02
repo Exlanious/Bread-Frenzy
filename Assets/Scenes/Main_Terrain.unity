@@ -3458,6 +3458,14 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 798388953}
     - target: {fileID: 303807900617876326, guid: 0964ed6b2ed5194439fcf41c67eb1fee, type: 3}
+      propertyPath: playerModel
+      value: 
+      objectReference: {fileID: 721925397}
+    - target: {fileID: 303807900617876326, guid: 0964ed6b2ed5194439fcf41c67eb1fee, type: 3}
+      propertyPath: scalePerLevel
+      value: 0.15
+      objectReference: {fileID: 0}
+    - target: {fileID: 303807900617876326, guid: 0964ed6b2ed5194439fcf41c67eb1fee, type: 3}
       propertyPath: xpToNextLevel
       value: 30
       objectReference: {fileID: 0}
