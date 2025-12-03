@@ -3056,12 +3056,14 @@ MonoBehaviour:
   playerXP: {fileID: 0}
   breakWaveHealAmount: 1
   playerHealth: {fileID: 0}
-  healthPerWave: 0.15
+  healthPerWave: 0.22
   healthPerLevel: 0.1
-  damagePerWave: 0.04
+  damagePerWave: 0.1
   damagePerLevel: 0.03
-  speedPerWave: 0.05
+  speedPerWave: 0.03
   speedPerLevel: 0.04
+  xpPerWave: 0.2
+  xpPerLevel: 0.1
 --- !u!4 &908837679
 Transform:
   m_ObjectHideFlags: 0

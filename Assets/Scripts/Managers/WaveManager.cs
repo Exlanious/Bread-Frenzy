@@ -88,6 +88,12 @@ public class WaveManager : MonoBehaviour
 
     [Tooltip("Extra enemy move speed per player level above 1.")]
     public float speedPerLevel = 0.04f;
+    [Header("XP Scaling")]
+    [Tooltip("Extra enemy XP per wave (multiplier per wave).")]
+    public float xpPerWave = 0.20f;   // +20% XP per wave
+
+    [Tooltip("Extra enemy XP per player level above 1.")]
+    public float xpPerLevel = 0.10f;  // +10% XP per player level
 
     private int currentWaveNumber = 0;   
     private int enemiesAlive = 0;
@@ -290,18 +296,24 @@ public class WaveManager : MonoBehaviour
             + (currentWaveNumber - 1) * speedPerWave
             + levelsAboveOne * speedPerLevel;
 
+        float xpMult = 1f
+            + (currentWaveNumber - 1) * xpPerWave
+            + levelsAboveOne * xpPerLevel;
+
         switch (wave.waveType)
         {
             case WaveType.Power:
                 healthMult *= 0.5f;
                 damageMult *= 0.8f;
                 speedMult *= 0.9f;
+                xpMult *= 1.2f;   
                 break;
 
             case WaveType.MiniBoss:
                 healthMult *= 3f;
                 damageMult *= 1.8f;
                 speedMult *= 0.9f;
+                xpMult *= 4f;     
                 enemy.transform.localScale *= 1.5f;
                 break;
 
@@ -309,6 +321,7 @@ public class WaveManager : MonoBehaviour
                 healthMult *= 5f;
                 damageMult *= 2.2f;
                 speedMult *= 1.0f;
+                xpMult *= 8f;     
                 enemy.transform.localScale *= 2f;
                 break;
         }
@@ -316,6 +329,9 @@ public class WaveManager : MonoBehaviour
         if (health != null)
         {
             health.maxHealth = Mathf.Max(1, Mathf.RoundToInt(health.maxHealth * healthMult));
+
+            int baseXP = Mathf.Max(1, health.xpValue);
+            health.xpValue = Mathf.Max(1, Mathf.RoundToInt(baseXP * xpMult));
         }
 
         if (attack != null)
@@ -329,6 +345,7 @@ public class WaveManager : MonoBehaviour
             if (agent != null) agent.speed = moveAI.chaseSpeed;
         }
     }
+
 
     private void HandleEnemyDied(EnemyHealth health)
     {
