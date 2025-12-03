@@ -3,19 +3,20 @@ using UnityEngine;
 public class EnemyAttack : MonoBehaviour
 {
     [Header("Target")]
-    public Transform player; 
+    public Transform player;
     protected PlayerHealth playerHealth;
+
+    [Header("State")]
+    public bool isKnockedBack = false;
 
     [Header("Attack Settings")]
     public int damage = 1;
     public float attackCooldown = 0.8f;
-
     public float attackRange = 1.6f;
 
     [Header("Attack Timing (no anims)")]
     [Tooltip("How long the enemy 'winds up' before the hit check.")]
     public float windupTime = 0.25f;
-
     [Tooltip("Small window where damage can happen once if you're still in range.")]
     public float hitWindow = 0.1f;
 
@@ -29,6 +30,11 @@ public class EnemyAttack : MonoBehaviour
 
     private Color _originalColor;
     private bool _hasOriginalColor = false;
+
+    public void SetKnockedBack(bool value)
+    {
+        isKnockedBack = value;
+    }
 
     protected void Awake()
     {
@@ -47,7 +53,11 @@ public class EnemyAttack : MonoBehaviour
     {
         if (player == null || playerHealth == null) return;
 
-        float distance = Vector3.Distance(transform.position, player.position);
+        if (isKnockedBack) return;
+
+        Vector3 delta = player.position - transform.position;
+        delta.y = 0f;                       
+        float distance = delta.magnitude;   
 
         if (!isAttacking &&
             distance <= attackRange &&
@@ -70,6 +80,12 @@ public class EnemyAttack : MonoBehaviour
 
         while (t < windupTime)
         {
+            if (isKnockedBack)
+            {
+                CancelAttack();
+                yield break;
+            }
+
             t += Time.deltaTime;
 
             if (player != null)
@@ -86,11 +102,20 @@ public class EnemyAttack : MonoBehaviour
 
         while (hitT < hitWindow)
         {
+            if (isKnockedBack)
+            {
+                CancelAttack();
+                yield break;
+            }
+
             hitT += Time.deltaTime;
 
             if (!hasHit && playerHealth != null && player != null)
             {
-                float distance = Vector3.Distance(transform.position, player.position);
+                Vector3 delta = player.position - transform.position;
+                delta.y = 0f;                       
+                float distance = delta.magnitude;  
+
                 if (distance <= attackRange)
                 {
                     Debug.Log($"[EnemyAttack:{name}] Attacking player for {damage} damage.");
@@ -104,6 +129,16 @@ public class EnemyAttack : MonoBehaviour
 
         lastAttackTime = Time.time;
 
+        if (telegraphRenderer != null && _hasOriginalColor)
+        {
+            telegraphRenderer.material.color = _originalColor;
+        }
+
+        isAttacking = false;
+    }
+
+    private void CancelAttack()
+    {
         if (telegraphRenderer != null && _hasOriginalColor)
         {
             telegraphRenderer.material.color = _originalColor;

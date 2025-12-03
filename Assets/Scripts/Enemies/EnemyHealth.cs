@@ -40,6 +40,8 @@ public class EnemyHealth : MonoBehaviour
 
     [Header("XP Settings")]
     public int xpValue = 1;  
+    [Header("XP Drop")]
+    public GameObject xpOrbPrefab;
 
     public static System.Action<int> OnAnyEnemyDied;
 
@@ -147,6 +149,9 @@ public class EnemyHealth : MonoBehaviour
         if (inKnockback) yield break;
         inKnockback = true;
 
+        var attack = GetComponent<EnemyAttack>();
+        if (attack != null) attack.SetKnockedBack(true);
+
         hitDirection.y = 0f;
         hitDirection.Normalize();
 
@@ -173,6 +178,10 @@ public class EnemyHealth : MonoBehaviour
         }
 
         transform.position = targetPos;
+
+        var attack2 = GetComponent<EnemyAttack>();
+        if (attack != null) attack2.SetKnockedBack(false);
+
         inKnockback = false;
     }
 
@@ -192,7 +201,46 @@ public class EnemyHealth : MonoBehaviour
         if (healthBar != null)
             healthBar.gameObject.SetActive(false);
 
+        if (xpOrbPrefab != null && xpValue > 0)
+        {
+            int xpPerOrb = 5;
+            int totalXP = xpValue;
+
+            int numFullOrbs = totalXP / xpPerOrb;
+            int remainder = totalXP % xpPerOrb;
+
+            Vector3 basePos = transform.position + Vector3.up * 0.5f;
+
+            for (int i = 0; i < numFullOrbs; i++)
+            {
+                Vector3 spawnPos = GetOrbSpawnPosition(basePos);
+                GameObject orbObj = Instantiate(xpOrbPrefab, spawnPos, Quaternion.identity);
+
+                var orb = orbObj.GetComponent<XPOrb>();
+                if (orb != null)
+                    orb.xpAmount = xpPerOrb;
+            }
+
+            if (remainder > 0)
+            {
+                Vector3 spawnPos = GetOrbSpawnPosition(basePos);
+                GameObject orbObj = Instantiate(xpOrbPrefab, spawnPos, Quaternion.identity);
+
+                var orb = orbObj.GetComponent<XPOrb>();
+                if (orb != null)
+                    orb.xpAmount = remainder;
+            }
+        }
+
         StartCoroutine(DeathRoutine());
+    }
+
+    private Vector3 GetOrbSpawnPosition(Vector3 basePos)
+    {
+        float angle = UnityEngine.Random.Range(0f, Mathf.PI * 2f);
+        float radius = UnityEngine.Random.Range(0f, 0.75f);
+        Vector3 offset = new Vector3(Mathf.Cos(angle), 0f, Mathf.Sin(angle)) * radius;
+        return basePos + offset;
     }
 
     private IEnumerator DeathRoutine()

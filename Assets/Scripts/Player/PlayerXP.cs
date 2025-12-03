@@ -24,15 +24,6 @@ public class PlayerXP : MonoBehaviour
     private int xpQueue = 0;           
     private bool isAnimatingXP = false;
     private int totalXP = 0;          
-    void OnEnable()
-    {
-        EnemyHealth.OnAnyEnemyDied += OnEnemyDied;
-    }
-
-    void OnDisable()
-    {
-        EnemyHealth.OnAnyEnemyDied -= OnEnemyDied;
-    }
 
     void Awake()
     {
@@ -50,12 +41,7 @@ public class PlayerXP : MonoBehaviour
         if (playerModel != null)
             baseScale = playerModel.localScale;
     }
-
-    private void OnEnemyDied(int xpGained)
-    {
-        GainXP(xpGained);
-    }
-
+    
     public void GainXP(int amount)
     {
         totalXP += amount;
