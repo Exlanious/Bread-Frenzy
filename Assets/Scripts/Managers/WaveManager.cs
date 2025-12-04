@@ -90,10 +90,10 @@ public class WaveManager : MonoBehaviour
     public float speedPerLevel = 0.04f;
     [Header("XP Scaling")]
     [Tooltip("Extra enemy XP per wave (multiplier per wave).")]
-    public float xpPerWave = 0.20f;   // +20% XP per wave
+    public float xpPerWave = 0.20f;   
 
     [Tooltip("Extra enemy XP per player level above 1.")]
-    public float xpPerLevel = 0.10f;  // +10% XP per player level
+    public float xpPerLevel = 0.10f;  
 
     private int currentWaveNumber = 0;   
     private int enemiesAlive = 0;
@@ -103,6 +103,7 @@ public class WaveManager : MonoBehaviour
     private float currentSpawnInterval;
 
     private Wave currentWave;
+    private bool isShuttingDown = false;
 
     private void Start()
     {
@@ -346,10 +347,16 @@ public class WaveManager : MonoBehaviour
         }
     }
 
-
     private void HandleEnemyDied(EnemyHealth health)
     {
-        health.OnEnemyDied -= HandleEnemyDied;
+        if (isShuttingDown || !this || !isActiveAndEnabled)
+            return;
+
+        if (health != null)
+        {
+            health.OnEnemyDied -= HandleEnemyDied;
+        }
+
         enemiesAlive--;
 
         if (RunStats.Instance != null)
@@ -357,14 +364,17 @@ public class WaveManager : MonoBehaviour
             RunStats.Instance.RegisterEnemyDefeated();
         }
 
-        if (waveActive && enemiesAlive <= 0)
-        {
-            EndWave();
-        }
+        if (!waveActive || enemiesAlive > 0)
+            return;
+
+        EndWave();
     }
 
     private void EndWave()
     {
+        if (isShuttingDown || !this || !isActiveAndEnabled)
+            return;
+
         waveActive = false;
         Debug.Log($"[WaveManager] {currentWave.waveName} (Wave {currentWaveNumber}) complete! All enemies dead.");
 
@@ -381,4 +391,15 @@ public class WaveManager : MonoBehaviour
         yield return new WaitForSeconds(timeBetweenWaves);
         StartCoroutine(StartNextWave());
     }
+
+    private void OnDisable()
+    {
+        isShuttingDown = true;
+    }
+
+    private void OnDestroy()
+    {
+        isShuttingDown = true;
+    }
+
 }
