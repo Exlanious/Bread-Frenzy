@@ -1339,6 +1339,63 @@ SphereCollider:
   serializedVersion: 3
   m_Radius: 5
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!1001 &292208746
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 3528407808756693124, guid: 4c3423364d0e7014ba331f4bb4c0b0cb, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3528407808756693124, guid: 4c3423364d0e7014ba331f4bb4c0b0cb, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3528407808756693124, guid: 4c3423364d0e7014ba331f4bb4c0b0cb, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3528407808756693124, guid: 4c3423364d0e7014ba331f4bb4c0b0cb, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3528407808756693124, guid: 4c3423364d0e7014ba331f4bb4c0b0cb, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3528407808756693124, guid: 4c3423364d0e7014ba331f4bb4c0b0cb, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3528407808756693124, guid: 4c3423364d0e7014ba331f4bb4c0b0cb, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3528407808756693124, guid: 4c3423364d0e7014ba331f4bb4c0b0cb, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3528407808756693124, guid: 4c3423364d0e7014ba331f4bb4c0b0cb, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3528407808756693124, guid: 4c3423364d0e7014ba331f4bb4c0b0cb, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4803078187968851598, guid: 4c3423364d0e7014ba331f4bb4c0b0cb, type: 3}
+      propertyPath: m_Name
+      value: SPEnemy1
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 4c3423364d0e7014ba331f4bb4c0b0cb, type: 3}
 --- !u!1 &335452043
 GameObject:
   m_ObjectHideFlags: 0
@@ -1835,8 +1892,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 36
-  m_fontSizeBase: 36
+  m_fontSize: 30
+  m_fontSizeBase: 30
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -3057,11 +3114,11 @@ MonoBehaviour:
   breakWaveHealAmount: 1
   playerHealth: {fileID: 0}
   healthPerWave: 0.22
-  healthPerLevel: 0.1
+  healthPerLevel: 0.2
   damagePerWave: 0.1
   damagePerLevel: 0.03
-  speedPerWave: 0.03
-  speedPerLevel: 0.04
+  speedPerWave: 0.1
+  speedPerLevel: 0.05
   xpPerWave: 0.2
   xpPerLevel: 0.1
 --- !u!4 &908837679
@@ -3116,7 +3173,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 0}
   m_AnchoredPosition: {x: 0, y: 40}
-  m_SizeDelta: {x: -100, y: 60}
+  m_SizeDelta: {x: -100, y: 30}
   m_Pivot: {x: 0.5, y: 0}
 --- !u!114 &1107835905
 MonoBehaviour:
@@ -3428,15 +3485,15 @@ PrefabInstance:
       objectReference: {fileID: 721925397}
     - target: {fileID: 303807900617876326, guid: 0964ed6b2ed5194439fcf41c67eb1fee, type: 3}
       propertyPath: scalePerLevel
-      value: 0.15
+      value: 0.03
       objectReference: {fileID: 0}
     - target: {fileID: 303807900617876326, guid: 0964ed6b2ed5194439fcf41c67eb1fee, type: 3}
       propertyPath: xpToNextLevel
-      value: 30
+      value: 60
       objectReference: {fileID: 0}
     - target: {fileID: 303807900617876326, guid: 0964ed6b2ed5194439fcf41c67eb1fee, type: 3}
       propertyPath: xpGrowthFactor
-      value: 1.2
+      value: 1.5
       objectReference: {fileID: 0}
     - target: {fileID: 2239613870587023323, guid: 0964ed6b2ed5194439fcf41c67eb1fee, type: 3}
       propertyPath: instantHealAmount
@@ -5230,6 +5287,7 @@ SceneRoots:
   - {fileID: 734408916}
   - {fileID: 410087041}
   - {fileID: 832575519}
+  - {fileID: 292208746}
   - {fileID: 2404430711762201682}
   - {fileID: 1291387469}
   - {fileID: 1406328360}
