@@ -3066,6 +3066,32 @@ MonoBehaviour:
   xpPerLevel: 0.1
   bossPrefab: {fileID: 4803078187968851598, guid: 4c3423364d0e7014ba331f4bb4c0b0cb, type: 3}
   bossSpawnPoints: []
+  enableSampleWaveHotkeys: 0
+  sampleNormalWave:
+    waveName: Sample Normal
+    waveType: 0
+    enemyCount: 5
+    spawnInterval: 0.5
+  samplePowerWave:
+    waveName: Sample Power
+    waveType: 3
+    enemyCount: 3
+    spawnInterval: 0.6
+  sampleBreakWave:
+    waveName: Sample Break
+    waveType: 1
+    enemyCount: 0
+    spawnInterval: 0
+  sampleMiniBossWave:
+    waveName: Sample MiniBoss
+    waveType: 2
+    enemyCount: 1
+    spawnInterval: 0
+  sampleBossWave:
+    waveName: Sample Boss
+    waveType: 4
+    enemyCount: 1
+    spawnInterval: 0
 --- !u!4 &908837679
 Transform:
   m_ObjectHideFlags: 0
@@ -4019,7 +4045,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1406328359
 MonoBehaviour:
   m_ObjectHideFlags: 0
