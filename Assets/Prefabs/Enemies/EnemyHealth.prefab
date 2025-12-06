@@ -161,7 +161,7 @@ MonoBehaviour:
   m_FallbackScreenDPI: 96
   m_DefaultSpriteDPI: 96
   m_DynamicPixelsPerUnit: 1
-  m_PresetInfoIsWorld: 1
+  m_PresetInfoIsWorld: 0
 --- !u!114 &2610105691774337256
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -192,6 +192,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   progressBarFill: {fileID: 5396935963957466872}
+  healthyColor: {r: 0, g: 1, b: 0, a: 1}
+  midColor: {r: 1, g: 0.8, b: 0, a: 1}
+  lowColor: {r: 1, g: 0, b: 0, a: 1}
 --- !u!114 &1417101787494934107
 MonoBehaviour:
   m_ObjectHideFlags: 0
