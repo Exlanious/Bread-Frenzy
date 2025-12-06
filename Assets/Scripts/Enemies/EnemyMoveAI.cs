@@ -1,44 +1,60 @@
-using System.Collections;
 using UnityEngine;
 using UnityEngine.AI;
 
-[DisallowMultipleComponent]
 [RequireComponent(typeof(NavMeshAgent), typeof(Rigidbody))]
 public class EnemyMoveAI : MonoBehaviour
 {
     [Header("Target")]
     public Transform player;
 
-    [Header("Movement Settings")]
-    public bool moveByAgent = false;
+    [Header("Movement")]
+    public bool moveByAgent = true;
     public float chaseSpeed = 3.5f;
     public float stopDistance = 1.5f;
+    public float navMeshSnapDistance = 50f;
 
     [Header("Ground Check")]
     public Transform groundCheck;
     public float groundDistance = 0.2f;
     public LayerMask groundMask;
-    public bool isGrounded = false;
+    public bool isGrounded;
 
-    [Header("Teleport/Stun Settings")]
-    [SerializeField] private float teleportHeightForce = 5f;
-    [SerializeField] private float stunDuration = 1f;
+    NavMeshAgent agent;
+    Rigidbody rb;
 
-    [Header("NavMesh Settings")]
-    [Tooltip("Maximum distance to snap to nearest NavMesh position after teleport.")]
-    [SerializeField] private float navMeshSnapDistance = 2f;
-
-    [Header("Components")]
-    [SerializeField] private NavMeshAgent agent;
-    [SerializeField] private Rigidbody rigidBody;
-
+    bool loggedStartState;
+    bool loggedFirstDestination;
 
     void Awake()
     {
-        if (agent == null) agent = GetComponent<NavMeshAgent>();
-        if (rigidBody == null) rigidBody = GetComponent<Rigidbody>();
+        agent = GetComponent<NavMeshAgent>();
+        rb = GetComponent<Rigidbody>();
 
-        agent.stoppingDistance = 0f;
+        if (player == null)
+        {
+            var p = GameObject.FindGameObjectWithTag("Player");
+            if (p != null) player = p.transform;
+        }
+    }
+
+    void Start()
+    {
+        SnapToNavMesh();
+        LogStartState();
+    }
+
+    void OnEnable()
+    {
+        SnapToNavMesh();
+
+        if (agent != null && agent.enabled && agent.isOnNavMesh)
+            agent.isStopped = false;
+    }
+
+    void OnDisable()
+    {
+        if (agent != null && agent.enabled && agent.isOnNavMesh)
+            agent.isStopped = true;
     }
 
     void Update()
@@ -48,18 +64,44 @@ public class EnemyMoveAI : MonoBehaviour
             isGrounded = Physics.CheckSphere(groundCheck.position, groundDistance, groundMask);
         }
 
-        // Safety: stop all movement logic if not ready
-        if (player == null || !moveByAgent || agent == null)
+        if (!moveByAgent)
+        {
             return;
+        }
 
-        if (!agent.enabled || !agent.isOnNavMesh)
+        if (agent == null)
+        {
+            Debug.LogError($"{name}: EnemyMoveAI - NavMeshAgent missing.");
             return;
+        }
+
+        if (!agent.enabled)
+        {
+            Debug.LogWarning($"{name}: EnemyMoveAI - agent disabled.");
+            return;
+        }
+
+        if (!agent.isOnNavMesh)
+        {
+            SnapToNavMesh();
+            if (!agent.isOnNavMesh)
+            {
+                Debug.LogWarning($"{name}: EnemyMoveAI - still not on NavMesh after snap.");
+                return;
+            }
+        }
+
+        if (player == null)
+        {
+            Debug.LogWarning($"{name}: EnemyMoveAI - player is null.");
+            return;
+        }
 
         Vector3 toPlayer = player.position - transform.position;
         toPlayer.y = 0f;
-        float distance = toPlayer.magnitude;
+        float dist = toPlayer.magnitude;
 
-        if (distance <= stopDistance)
+        if (dist <= stopDistance)
         {
             agent.isStopped = true;
             return;
@@ -68,87 +110,81 @@ public class EnemyMoveAI : MonoBehaviour
         agent.isStopped = false;
         agent.speed = chaseSpeed;
 
-        Vector3 targetPos = player.position - toPlayer.normalized * stopDistance;
-        agent.SetDestination(targetPos);
+        Vector3 dest = player.position;
+        bool ok = agent.SetDestination(dest);
+
+        if (!loggedFirstDestination)
+        {
+            loggedFirstDestination = true;
+            Debug.Log($"{name}: EnemyMoveAI - SetDestination({dest}) success={ok}, isOnNavMesh={agent.isOnNavMesh}, hasPath={agent.hasPath}");
+        }
     }
 
-    void OnDisable()
+    void SnapToNavMesh()
     {
-        if (agent.isActiveAndEnabled)
-            agent.isStopped = true;
+        if (agent == null) return;
+
+        NavMeshHit hit;
+        if (NavMesh.SamplePosition(transform.position, out hit, navMeshSnapDistance, NavMesh.AllAreas))
+        {
+            agent.Warp(hit.position);
+        }
+        else
+        {
+            Debug.LogWarning($"{name}: EnemyMoveAI - no NavMesh within {navMeshSnapDistance} of {transform.position}");
+        }
     }
 
-    void OnEnable()
-    {
-        if (agent.isActiveAndEnabled)
-            agent.isStopped = false;
-    }
-
+    // other scripts call this, so keep it
     public void SetPhysicsMode(bool usePhysics)
     {
+        if (agent == null || rb == null) return;
+
         if (usePhysics)
         {
-            agent.enabled = false;
+            if (agent.enabled && agent.isOnNavMesh)
+                agent.isStopped = true;
 
-            rigidBody.isKinematic = false;
-            rigidBody.useGravity = true;
+            agent.enabled = false;
+            rb.isKinematic = false;
+            rb.useGravity = true;
         }
         else
         {
-            rigidBody.isKinematic = true;
-            rigidBody.useGravity = false;
+            rb.isKinematic = true;
+            rb.useGravity = false;
 
             agent.enabled = true;
-            agent.ResetPath();
+            SnapToNavMesh();
+
+            if (agent.isOnNavMesh)
+            {
+                agent.ResetPath();
+                agent.isStopped = false;
+            }
         }
     }
 
-    /*
-    public void Teleport(Vector3 targetPosition)
+    void LogStartState()
     {
-        StartCoroutine(TeleportResolveCoroutine(targetPosition));
+        if (loggedStartState) return;
+        loggedStartState = true;
+
+        string playerName = player != null ? player.name : "null";
+        bool hasAgent = agent != null;
+        bool onMesh = hasAgent && agent.isOnNavMesh;
+        float speed = hasAgent ? agent.speed : 0f;
+
+        Debug.Log($"{name}: EnemyMoveAI Start - moveByAgent={moveByAgent}, hasAgent={hasAgent}, enabled={hasAgent && agent.enabled}, isOnNavMesh={onMesh}, agentSpeed={speed}, player={playerName}");
     }
 
-    private IEnumerator TeleportResolveCoroutine(Vector3 targetPosition)
+    void OnDrawGizmosSelected()
     {
-        yield return null; 
-        agent.enabled = false;
-
-        if (NavMesh.SamplePosition(targetPosition, out NavMeshHit hit, navMeshSnapDistance, NavMesh.AllAreas))
+        if (agent != null)
         {
-            transform.position = hit.position;
+            Gizmos.color = agent.enabled ? Color.yellow : Color.red;
+            Gizmos.DrawWireSphere(transform.position, stopDistance);
         }
-        else
-        {
-            rigidBody.useGravity = true;
-            rigidBody.isKinematic = false;
-            rigidBody.linearVelocity = Vector3.up * teleportHeightForce;
-
-            transform.position = targetPosition;
-            Physics.SyncTransforms();
-
-            isGrounded = false;
-            yield return new WaitForFixedUpdate();
-            yield return new WaitUntil(() => isGrounded);
-            yield return new WaitForSeconds(stunDuration);
-
-            rigidBody.linearVelocity = Vector3.zero;
-            rigidBody.angularVelocity = Vector3.zero;
-            rigidBody.isKinematic = true;
-            rigidBody.useGravity = false;
-
-        }
-        agent.Warp(transform.position);
-        agent.enabled = true;
-    }
-
-    */
-
-    private void OnDrawGizmosSelected()
-    {
-        if (isActiveAndEnabled == false) return;
-        Gizmos.color = agent != null && agent.enabled ? Color.yellow : Color.red;
-        Gizmos.DrawWireSphere(transform.position, stopDistance);
 
         Gizmos.color = Color.cyan;
         Gizmos.DrawWireSphere(transform.position, navMeshSnapDistance);

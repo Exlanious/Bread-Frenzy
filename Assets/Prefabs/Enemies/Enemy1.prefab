@@ -15,7 +15,7 @@ GameObject:
   - component: {fileID: 4943330450555048939}
   - component: {fileID: 4425463193104180810}
   - component: {fileID: 7447316321099736420}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Enemy1
   m_TagString: Swappable
   m_Icon: {fileID: 0}
@@ -128,17 +128,13 @@ MonoBehaviour:
   moveByAgent: 1
   chaseSpeed: 3.5
   stopDistance: 1.5
+  navMeshSnapDistance: 2
   groundCheck: {fileID: 3679981956728554794}
   groundDistance: 0.2
   groundMask:
     serializedVersion: 2
     m_Bits: 0
   isGrounded: 0
-  teleportHeightForce: 5
-  stunDuration: 1
-  navMeshSnapDistance: 2
-  agent: {fileID: 4550352621460690692}
-  rigidBody: {fileID: 3119703691823283559}
 --- !u!114 &4425463193104180810
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -222,7 +218,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 3679981956728554794}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: GroundCheck
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -252,9 +248,21 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 820534006034334686}
     m_Modifications:
+    - target: {fileID: 1214558386752004324, guid: baee669fe43059a4499ff510c3377252, type: 3}
+      propertyPath: m_Layer
+      value: 7
+      objectReference: {fileID: 0}
     - target: {fileID: 1437984690979930717, guid: baee669fe43059a4499ff510c3377252, type: 3}
       propertyPath: m_Name
       value: Canvas
+      objectReference: {fileID: 0}
+    - target: {fileID: 1437984690979930717, guid: baee669fe43059a4499ff510c3377252, type: 3}
+      propertyPath: m_Layer
+      value: 7
+      objectReference: {fileID: 0}
+    - target: {fileID: 4114592345320455842, guid: baee669fe43059a4499ff510c3377252, type: 3}
+      propertyPath: m_Layer
+      value: 7
       objectReference: {fileID: 0}
     - target: {fileID: 4322072066298854358, guid: baee669fe43059a4499ff510c3377252, type: 3}
       propertyPath: m_PresetInfoIsWorld
@@ -424,6 +432,10 @@ PrefabInstance:
     - target: {fileID: 919132149155446097, guid: b1208788aba094f5383dfe5980206438, type: 3}
       propertyPath: m_Name
       value: duck_3_bread _frency
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: b1208788aba094f5383dfe5980206438, type: 3}
+      propertyPath: m_Layer
+      value: 7
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
