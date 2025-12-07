@@ -149,8 +149,9 @@ public class EnemyHealth : MonoBehaviour
         if (inKnockback) yield break;
         inKnockback = true;
 
-        var attack = GetComponent<EnemyAttack>();
-        if (attack != null) attack.SetKnockedBack(true);
+        var attacks = GetComponents<IEnemyAttack>();
+        foreach (var atk in attacks)
+            atk.SetKnockedBack(true);
 
         hitDirection.y = 0f;
         hitDirection.Normalize();
@@ -163,11 +164,9 @@ public class EnemyHealth : MonoBehaviour
         while (elapsed < knockbackDuration)
         {
             float t = elapsed / knockbackDuration;
-
             float eased = knockbackCurve.Evaluate(t);
 
             Vector3 pos = Vector3.Lerp(startPos, targetPos, eased);
-
             float height = Mathf.Sin(t * Mathf.PI) * verticalBump;
             pos.y = startPos.y + height;
 
@@ -179,8 +178,9 @@ public class EnemyHealth : MonoBehaviour
 
         transform.position = targetPos;
 
-        var attack2 = GetComponent<EnemyAttack>();
-        if (attack != null) attack2.SetKnockedBack(false);
+        attacks = GetComponents<IEnemyAttack>();
+        foreach (var atk in attacks)
+            atk.SetKnockedBack(false);
 
         inKnockback = false;
     }

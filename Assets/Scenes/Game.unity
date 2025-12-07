@@ -149,13 +149,17 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   player: {fileID: 1540315642}
-  enemyPrefab: {fileID: 6682682836454495409, guid: 48a7b2e9b75356a43bc1863ebe2db03e, type: 3}
+  basicDuckPrefab: {fileID: 6682682836454495409, guid: 48a7b2e9b75356a43bc1863ebe2db03e, type: 3}
+  fastDuckPrefab: {fileID: 8556112603900198680, guid: 80ff54c4e01a3ba4ba81ce8bbd9227f8, type: 3}
+  tankDuckPrefab: {fileID: 8556112603900198680, guid: 28ba81f14a4350448944ab47118ff902, type: 3}
   minSpawnRadius: 8
   maxSpawnRadius: 14
   startInterval: 2
   minInterval: 0.5
   timeToMaxDifficulty: 90
   maxAliveEnemies: 50
+  fastDuckChance: 0.25
+  tankDuckChance: 0.15
 --- !u!4 &16646480
 Transform:
   m_ObjectHideFlags: 0
@@ -536,6 +540,7 @@ MonoBehaviour:
   minSpawnInterval: 0.15
   spawnIntervalDecay: 0.95
   breakEvery: 5
+  fastDuckEvery: 3
   miniBossEvery: 7
   bossEvery: 10
   powerEvery: 4

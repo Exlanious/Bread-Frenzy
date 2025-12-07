@@ -54,12 +54,25 @@ public class WaveBannerUI : MonoBehaviour
         }
     }
 
+    private string GetDisplayNameForWaveType(WaveType waveType)
+    {
+        switch (waveType)
+        {
+            case WaveType.FastDuck:
+                return "FAST DUCKS";
+            case WaveType.MiniBoss:
+                return "MINI-BOSS";
+            default:
+                return waveType.ToString().ToUpperInvariant();
+        }
+    }
+
     private void HandleWaveStarted(Wave wave, int waveNumber)
     {
         if (canvasGroup == null || titleText == null)
             return;
 
-        string waveTypeName = wave.waveType.ToString();
+        string waveTypeName = GetDisplayNameForWaveType(wave.waveType);
         titleText.text = $"WAVE {waveNumber} – {waveTypeName}";
 
         if (subtitleText != null)
@@ -127,6 +140,8 @@ public class WaveBannerUI : MonoBehaviour
                 return "A stronger duck appears...";
             case WaveType.Boss:
                 return "Boss wave!";
+            case WaveType.FastDuck: 
+                return "They're so fast...!";
             default:
                 return "";
         }
@@ -137,17 +152,20 @@ public class WaveBannerUI : MonoBehaviour
         switch (waveType)
         {
             case WaveType.Normal:
-                return new Color(0.1f, 0.3f, 0.6f, 0.8f);   
+                return new Color(0.1f, 0.3f, 0.6f, 0.8f);   // blue-ish
             case WaveType.Break:
-                return new Color(0.1f, 0.5f, 0.2f, 0.8f);   
+                return new Color(0.1f, 0.5f, 0.2f, 0.8f);   // green-ish
             case WaveType.Power:
-                return new Color(0.7f, 0.5f, 0.1f, 0.8f);  
+                return new Color(0.7f, 0.5f, 0.1f, 0.8f);   // gold-ish
             case WaveType.MiniBoss:
-                return new Color(0.4f, 0.1f, 0.5f, 0.8f);   
+                return new Color(0.4f, 0.1f, 0.5f, 0.8f);   // purple-ish
             case WaveType.Boss:
-                return new Color(0.6f, 0.1f, 0.1f, 0.9f); 
+                return new Color(0.6f, 0.1f, 0.1f, 0.9f);   // red-ish
+            case WaveType.FastDuck:                         
+                return new Color(0.1f, 0.6f, 0.6f, 0.85f);  // teal / speedy vibe
             default:
                 return new Color(0f, 0f, 0f, 0.8f);
         }
     }
+
 }

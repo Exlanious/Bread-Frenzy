@@ -1,45 +1,46 @@
 using UnityEngine;
-public interface IEnemyAttack
-{
-    void SetKnockedBack(bool value);
-}
-public class EnemyAttack : MonoBehaviour, IEnemyAttack
+using System.Collections;
+
+public class RangedEnemyAttack : MonoBehaviour, IEnemyAttack
 {
     [Header("Target")]
     public Transform player;
-    protected PlayerHealth playerHealth;
+    private PlayerHealth playerHealth;
 
     [Header("State")]
     public bool isKnockedBack = false;
 
     [Header("Attack Settings")]
     public int damage = 1;
-    public float attackCooldown = 0.8f;
-    public float attackRange = 1.6f;
+    public float attackCooldown = 1.2f;
+    public float attackRange = 10f;
 
-    [Header("Attack Timing (no anims)")]
-    [Tooltip("How long the enemy 'winds up' before the hit check.")]
-    public float windupTime = 0.25f;
-    [Tooltip("Small window where damage can happen once if you're still in range.")]
-    public float hitWindow = 0.1f;
+    [Header("Attack Timing")]
+    public float windupTime = 0.3f;
+    public float projectileSpawnDelay = 0f; 
 
-    protected float lastAttackTime = -999f;
-    protected bool isAttacking = false;
-
-    [Header("Optional Visual Telegraph")]
-    [Tooltip("Renderer to tint during windup (optional).")]
+    [Header("Telegraph (optional)")]
     public Renderer telegraphRenderer;
-    public Color telegraphColor = new Color(1f, 0.3f, 0.3f, 1f);
+    public Color telegraphColor = new Color(0.4f, 0.9f, 1f, 1f);
 
     private Color _originalColor;
-    private bool _hasOriginalColor = false;
+    private bool _hasOriginalColor;
+
+    [Header("Projectile")]
+    public EnemyProjectile projectilePrefab;
+    public Transform firePoint;
+    public float projectileSpeed = 30f;  
+    public float verticalAimOffset = 0.5f;
+
+    private float lastAttackTime = -999f;
+    private bool isAttacking = false;
 
     public void SetKnockedBack(bool value)
     {
         isKnockedBack = value;
     }
 
-    protected void Awake()
+    void Awake()
     {
         playerHealth = FindObjectOfType<PlayerHealth>();
         if (playerHealth != null)
@@ -52,15 +53,14 @@ public class EnemyAttack : MonoBehaviour, IEnemyAttack
         }
     }
 
-    protected void Update()
+    void Update()
     {
         if (player == null || playerHealth == null) return;
-
         if (isKnockedBack) return;
 
         Vector3 delta = player.position - transform.position;
-        delta.y = 0f;                       
-        float distance = delta.magnitude;   
+        delta.y = 0f;
+        float distance = delta.magnitude;
 
         if (!isAttacking &&
             distance <= attackRange &&
@@ -70,16 +70,14 @@ public class EnemyAttack : MonoBehaviour, IEnemyAttack
         }
     }
 
-    private System.Collections.IEnumerator AttackRoutine()
+    private IEnumerator AttackRoutine()
     {
         isAttacking = true;
 
-        float t = 0f;
-
         if (telegraphRenderer != null && _hasOriginalColor)
-        {
             telegraphRenderer.material.color = telegraphColor;
-        }
+
+        float t = 0f;
 
         while (t < windupTime)
         {
@@ -93,49 +91,35 @@ public class EnemyAttack : MonoBehaviour, IEnemyAttack
 
             if (player != null)
             {
-                Vector3 lookTarget = new Vector3(player.position.x, transform.position.y, player.position.z);
+                Vector3 lookTarget = new Vector3(
+                    player.position.x,
+                    transform.position.y,
+                    player.position.z
+                );
                 transform.LookAt(lookTarget);
             }
 
             yield return null;
         }
 
-        bool hasHit = false;
-        float hitT = 0f;
+        if (projectileSpawnDelay > 0f)
+            yield return new WaitForSeconds(projectileSpawnDelay);
 
-        while (hitT < hitWindow)
+        if (!isKnockedBack && player != null && projectilePrefab != null && firePoint != null)
         {
-            if (isKnockedBack)
-            {
-                CancelAttack();
-                yield break;
-            }
+            Vector3 targetPos = player.position + Vector3.up * verticalAimOffset;
+            Vector3 dir = (targetPos - firePoint.position).normalized;
 
-            hitT += Time.deltaTime;
-
-            if (!hasHit && playerHealth != null && player != null)
-            {
-                Vector3 delta = player.position - transform.position;
-                delta.y = 0f;                       
-                float distance = delta.magnitude;  
-
-                if (distance <= attackRange)
-                {
-                    Debug.Log($"[EnemyAttack:{name}] Attacking player for {damage} damage.");
-                    playerHealth.TakeDamage(damage);
-                    hasHit = true;
-                }
-            }
-
-            yield return null;
+            EnemyProjectile proj = Instantiate(projectilePrefab, firePoint.position, Quaternion.LookRotation(dir));
+            proj.damage = damage;
+            proj.speed = projectileSpeed;
+            proj.Initialize(dir);
         }
 
         lastAttackTime = Time.time;
 
         if (telegraphRenderer != null && _hasOriginalColor)
-        {
             telegraphRenderer.material.color = _originalColor;
-        }
 
         isAttacking = false;
     }
@@ -143,16 +127,14 @@ public class EnemyAttack : MonoBehaviour, IEnemyAttack
     private void CancelAttack()
     {
         if (telegraphRenderer != null && _hasOriginalColor)
-        {
             telegraphRenderer.material.color = _originalColor;
-        }
 
         isAttacking = false;
     }
 
     private void OnDrawGizmosSelected()
     {
-        Gizmos.color = Color.red;
+        Gizmos.color = Color.cyan;
         Gizmos.DrawWireSphere(transform.position, attackRange);
     }
 }

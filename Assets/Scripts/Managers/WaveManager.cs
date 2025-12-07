@@ -11,7 +11,8 @@ public enum WaveType
     Break,
     MiniBoss,
     Power,
-    Boss
+    Boss,
+    FastDuck
 }
 
 [System.Serializable]
@@ -46,6 +47,8 @@ public class WaveManager : MonoBehaviour
     [Header("Special Wave Cadence")]
     [Tooltip("Every N waves, spawn a Break wave. Set <= 0 to disable.")]
     public int breakEvery = 5;
+    [Tooltip("Every N waves, spawn an All-Fast-Ducks wave. Set <= 0 to disable.")]
+    public int fastDuckEvery = 3; // tweak this as you like
 
     [Tooltip("Every N waves, spawn a Mini-Boss wave. Set <= 0 to disable.")]
     public int miniBossEvery = 7;
@@ -303,7 +306,14 @@ public class WaveManager : MonoBehaviour
             }
             else
             {
-                enemy = spawner.SpawnEnemyFromWave();
+                if (currentWave.waveType == WaveType.FastDuck)
+                {
+                    enemy = spawner.SpawnFastDuck();
+                }
+                else
+                {
+                    enemy = spawner.SpawnEnemyFromWave();
+                }
             }
 
             if (enemy != null)
@@ -344,6 +354,7 @@ public class WaveManager : MonoBehaviour
         bool isMiniBoss = miniBossEvery > 0 && waveNumber % miniBossEvery == 0;
         bool isBreak = breakEvery > 0 && waveNumber % breakEvery == 0;
         bool isPower = powerEvery > 0 && waveNumber % powerEvery == 0;
+        bool isFastDuck = fastDuckEvery > 0 && waveNumber % fastDuckEvery == 0;
 
         if (isBoss)
         {
@@ -356,6 +367,10 @@ public class WaveManager : MonoBehaviour
         else if (isBreak)
         {
             wave.waveType = WaveType.Break;
+        }
+        else if (isFastDuck) 
+        {
+            wave.waveType = WaveType.FastDuck;
         }
         else if (isPower)
         {
@@ -391,6 +406,15 @@ public class WaveManager : MonoBehaviour
                 int powerCount = Mathf.RoundToInt(currentBaseEnemyCount * 1.6f);
                 wave.enemyCount = Mathf.Max(8, powerCount);
                 wave.spawnInterval = Mathf.Max(minSpawnInterval, currentSpawnInterval * 0.6f);
+                break;
+
+            case WaveType.FastDuck:
+                wave.waveName = "Fast Duck Swarm";
+
+                int fastCount = Mathf.RoundToInt(currentBaseEnemyCount * 1.2f);
+                wave.enemyCount = Mathf.Max(6, fastCount);
+
+                wave.spawnInterval = Mathf.Max(minSpawnInterval, currentSpawnInterval * 0.7f);
                 break;
 
             case WaveType.Normal:
@@ -584,7 +608,14 @@ public class WaveManager : MonoBehaviour
             }
             else
             {
-                enemy = spawner.SpawnEnemyFromWave();
+                if (wave.waveType == WaveType.FastDuck)
+                {
+                    enemy = spawner.SpawnFastDuck();
+                }
+                else
+                {
+                    enemy = spawner.SpawnEnemyFromWave();
+                }
             }
 
             if (enemy != null)
