@@ -5,7 +5,6 @@ using UnityEngine.AI;
 public class SimpleChaseNavmesh : MonoBehaviour
 {
     public Transform target;
-
     NavMeshAgent agent;
 
     void Awake()
@@ -22,8 +21,6 @@ public class SimpleChaseNavmesh : MonoBehaviour
 
     void Start()
     {
-        if (agent == null) return;
-
         NavMeshHit hit;
         if (NavMesh.SamplePosition(transform.position, out hit, 5f, NavMesh.AllAreas))
         {
@@ -42,9 +39,8 @@ public class SimpleChaseNavmesh : MonoBehaviour
         if (!agent.isOnNavMesh) return;
         if (target == null) return;
 
-        agent.speed = 3.5f;      // tweak as needed
+        agent.speed = 3.5f;
         agent.stoppingDistance = 0.5f;
-
         agent.SetDestination(target.position);
     }
 }

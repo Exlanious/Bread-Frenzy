@@ -45,6 +45,7 @@ public class PlayerMovement : MonoBehaviour
 
     private bool isDashing;
     private bool canDash = true;
+    private Vector3 groundNormal = Vector3.up;
 
     private Rigidbody rb;
     private bool isGrounded;
@@ -94,7 +95,12 @@ public class PlayerMovement : MonoBehaviour
     {
         if (groundCheck != null)
         {
-            bool groundedNow = Physics.CheckSphere(groundCheck.position, groundDistance, groundMask, QueryTriggerInteraction.Ignore);
+            bool groundedNow = Physics.CheckSphere(
+                groundCheck.position,
+                groundDistance,
+                groundMask,
+                QueryTriggerInteraction.Ignore
+            );
             if (groundedNow)
             {
                 isGrounded = true;
@@ -163,17 +169,17 @@ public class PlayerMovement : MonoBehaviour
         }
 
         Vector3 forward = cameraTransform != null ? cameraTransform.forward : Vector3.forward;
-        Vector3 right = cameraTransform != null ? cameraTransform.right : Vector3.right;
+        Vector3 right   = cameraTransform != null ? cameraTransform.right   : Vector3.right;
 
         forward.y = 0f;
-        right.y = 0f;
+        right.y   = 0f;
         forward.Normalize();
         right.Normalize();
 
         Vector3 inputDir = (forward * input.y + right * input.x);
         inputDir.Normalize();
 
-        Vector3 currentVel = rb.linearVelocity;
+        Vector3 currentVel       = rb.linearVelocity;
         Vector3 targetHorizontal = inputDir * moveSpeed;
 
         if (!isGrounded)
@@ -181,15 +187,27 @@ public class PlayerMovement : MonoBehaviour
 
         Vector3 currentHorizontal = new Vector3(currentVel.x, 0f, currentVel.z);
 
-        float smoothTime = (inputDir.sqrMagnitude > 0.001f) ? (1f / acceleration) : (1f / deceleration);
-        Vector3 horizontalVel = Vector3.SmoothDamp(currentHorizontal, targetHorizontal, ref velocitySmoothRef, smoothTime);
+        float smoothTime = (inputDir.sqrMagnitude > 0.001f)
+            ? (1f / acceleration)
+            : (1f / deceleration);
+
+        Vector3 horizontalVel = Vector3.SmoothDamp(
+            currentHorizontal,
+            targetHorizontal,
+            ref velocitySmoothRef,
+            smoothTime
+        );
 
         rb.linearVelocity = new Vector3(horizontalVel.x, currentVel.y, horizontalVel.z);
 
         if (inputDir.sqrMagnitude > 0.001f)
         {
             Quaternion targetRot = Quaternion.LookRotation(inputDir);
-            transform.rotation = Quaternion.Slerp(transform.rotation, targetRot, Time.deltaTime * rotationSpeed);
+            transform.rotation = Quaternion.Slerp(
+                transform.rotation,
+                targetRot,
+                Time.deltaTime * rotationSpeed
+            );
         }
     }
 
