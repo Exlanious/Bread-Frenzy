@@ -474,17 +474,15 @@ public class WaveManager : MonoBehaviour
                 wave.spawnInterval = Mathf.Max(minSpawnInterval, rangedInterval);
                 break;
 
-case WaveType.PanicMix:
-    wave.waveName = "Duck Ambush";
-    int panicBase = Mathf.RoundToInt(currentBaseEnemyCount * 1.3f);
-    int panicVar  = Mathf.RoundToInt(panicBase * 0.3f);
-    int panicCount = panicBase + UnityEngine.Random.Range(-panicVar, panicVar + 1);
-    wave.enemyCount = Mathf.Max(6, panicCount);
+            case WaveType.PanicMix:
+                wave.waveName = "Duck Ambush";
+                int panicBase = Mathf.RoundToInt(currentBaseEnemyCount * 1.3f);
+                int panicVar  = Mathf.RoundToInt(panicBase * 0.3f);
+                int panicCount = panicBase + UnityEngine.Random.Range(-panicVar, panicVar + 1);
+                wave.enemyCount = Mathf.Max(6, panicCount);
 
-    // Still "all at once", but a tiny bit of variation if you ever use it
-    wave.spawnInterval = minSpawnInterval;
-    break;
-
+                wave.spawnInterval = minSpawnInterval;
+                break;
 
             case WaveType.Normal:
             default:
