@@ -176,3 +176,10 @@ MonoBehaviour:
   bobSpeed: 3
   attractRadius: 5
   moveSpeed: 6
+  verticalOffset: 0.5
+  hoverHeight: 0.3
+  dropSpeed: 8
+  attractDelay: 0.3
+  groundMask:
+    serializedVersion: 2
+    m_Bits: 64

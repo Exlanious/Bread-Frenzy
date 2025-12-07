@@ -241,7 +241,7 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
-  xpValue: 1
+  xpValue: 5
   xpOrbPrefab: {fileID: 8156377634253175627, guid: 68c1c65607cfaca4182b48ded216c8f7, type: 3}
 --- !u!114 &383455061032035380
 MonoBehaviour:
