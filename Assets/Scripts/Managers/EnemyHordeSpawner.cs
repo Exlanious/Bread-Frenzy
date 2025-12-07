@@ -14,6 +14,9 @@ public class EnemyHordeSpawner : MonoBehaviour
     [Tooltip("Tank duck prefab for heavier enemies.")]
     public GameObject tankDuckPrefab;
 
+    [Tooltip("Ranged duck prefab for spitter enemies.")]
+    public GameObject rangedDuckPrefab;
+
     [Header("Spawn Area (around player)")]
     public float minSpawnRadius = 8f;
     public float maxSpawnRadius = 14f;
@@ -33,10 +36,38 @@ public class EnemyHordeSpawner : MonoBehaviour
     [Range(0f, 1f)]
     public float tankDuckChance = 0.15f;
 
+    [Range(0f, 1f)]
+    public float rangedDuckChance = 0.20f;
+
     float elapsedTime;
     float spawnTimer;
     int aliveEnemies;
 
+    public GameObject SpawnBasicDuck()
+    {
+        if (player == null)
+        {
+            Debug.LogWarning("EnemyHordeSpawner is missing player reference.");
+            return null;
+        }
+
+        if (aliveEnemies >= maxAliveEnemies)
+        {
+            return null;
+        }
+
+        if (basicDuckPrefab == null)
+        {
+            Debug.LogWarning("Basic duck prefab not set on EnemyHordeSpawner. Falling back to mixed spawn.");
+            return SpawnEnemyFromWave();
+        }
+
+        Vector3 spawnPos;
+        Quaternion lookRot;
+        GetSpawnTransform(out spawnPos, out lookRot);
+
+        return SpawnAndInitialize(basicDuckPrefab, spawnPos, lookRot);
+    }
 
     public GameObject SpawnEnemyFromWave()
     {
@@ -64,6 +95,7 @@ public class EnemyHordeSpawner : MonoBehaviour
 
         return SpawnAndInitialize(prefabToSpawn, spawnPos, lookRot);
     }
+
 
     public GameObject SpawnFastDuck()
     {
@@ -93,33 +125,69 @@ public class EnemyHordeSpawner : MonoBehaviour
         return SpawnAndInitialize(prefabToSpawn, spawnPos, lookRot);
     }
 
+    public GameObject SpawnRangedDuck()
+    {
+        if (player == null)
+        {
+            Debug.LogWarning("EnemyHordeSpawner is missing player reference.");
+            return null;
+        }
+
+        if (aliveEnemies >= maxAliveEnemies)
+        {
+            return null;
+        }
+
+        if (rangedDuckPrefab == null)
+        {
+            Debug.LogWarning("Ranged duck prefab not set on EnemyHordeSpawner. Falling back to normal spawn.");
+            return SpawnEnemyFromWave();
+        }
+
+        Vector3 spawnPos;
+        Quaternion lookRot;
+        GetSpawnTransform(out spawnPos, out lookRot);
+
+        return SpawnAndInitialize(rangedDuckPrefab, spawnPos, lookRot);
+    }
+
     // --------- Helper Methods ---------
 
     GameObject ChoosePrefabForNormalWave()
     {
-        if (basicDuckPrefab == null && fastDuckPrefab == null && tankDuckPrefab == null)
+        if (basicDuckPrefab == null && fastDuckPrefab == null && tankDuckPrefab == null && rangedDuckPrefab == null)
             return null;
 
-        if (basicDuckPrefab != null && fastDuckPrefab == null && tankDuckPrefab == null)
+        if (basicDuckPrefab != null && fastDuckPrefab == null && tankDuckPrefab == null && rangedDuckPrefab == null)
             return basicDuckPrefab;
 
-        float fastChance = Mathf.Clamp01(fastDuckChance);
-        float tankChance = Mathf.Clamp01(tankDuckChance);
-        float basicChance = Mathf.Clamp01(1f - fastChance - tankChance);
+        float fastChance   = Mathf.Clamp01(fastDuckChance);
+        float tankChance   = Mathf.Clamp01(tankDuckChance);
+        float rangedChance = Mathf.Clamp01(rangedDuckChance);
+
+        float basicChance = Mathf.Clamp01(1f - fastChance - tankChance - rangedChance);
 
         float roll = Random.value;
+
+        if (roll < rangedChance && rangedDuckPrefab != null)
+            return rangedDuckPrefab;
+
+        roll -= rangedChance;
 
         if (roll < fastChance && fastDuckPrefab != null)
             return fastDuckPrefab;
 
-        if (roll < fastChance + tankChance && tankDuckPrefab != null)
+        roll -= fastChance;
+
+        if (roll < tankChance && tankDuckPrefab != null)
             return tankDuckPrefab;
 
         if (basicDuckPrefab != null)
             return basicDuckPrefab;
 
-        if (fastDuckPrefab != null) return fastDuckPrefab;
-        if (tankDuckPrefab != null) return tankDuckPrefab;
+        if (rangedDuckPrefab != null) return rangedDuckPrefab;
+        if (fastDuckPrefab   != null) return fastDuckPrefab;
+        if (tankDuckPrefab   != null) return tankDuckPrefab;
 
         return null;
     }

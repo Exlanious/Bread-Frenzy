@@ -58,10 +58,30 @@ public class WaveBannerUI : MonoBehaviour
     {
         switch (waveType)
         {
-            case WaveType.FastDuck:
-                return "FAST DUCKS";
+            case WaveType.Normal:
+                return "NORMAL";
+
+            case WaveType.Break:
+                return "BREATHER";
+
+            case WaveType.Power:
+                return "MIXED MAYHEM";  
+
             case WaveType.MiniBoss:
                 return "MINI-BOSS";
+
+            case WaveType.Boss:
+                return "BOSS";
+
+            case WaveType.FastDuck:
+                return "SPEED DEMONS";  
+
+            case WaveType.AllRanged:
+                return "SNIPER SWARM";   
+
+            case WaveType.PanicMix:
+                return "FULL SURROUND";  
+
             default:
                 return waveType.ToString().ToUpperInvariant();
         }
@@ -131,17 +151,29 @@ public class WaveBannerUI : MonoBehaviour
         switch (waveType)
         {
             case WaveType.Normal:
-                return "Stay alive.";
+                return "Just some ducks. You’ve got this.";
+
             case WaveType.Break:
-                return "Catch your breath.";
-            case WaveType.Power:
-                return "Overwhelm the weak.";
+                return "Catch your breath… while you can.";
+
+            case WaveType.Power: 
+                return "Everything at once. Adapt or suffer.";
+
             case WaveType.MiniBoss:
-                return "A stronger duck appears...";
+                return "A jumper… and backup? Great.";
+
             case WaveType.Boss:
-                return "Boss wave!";
-            case WaveType.FastDuck: 
-                return "They're so fast...!";
+                return "Good luck, buddy.";
+
+            case WaveType.FastDuck:
+                return "They're everywhere and always too fast.";
+
+            case WaveType.AllRanged:
+                return "Snipers on all sides. Closing distance recommended.";
+
+            case WaveType.PanicMix:
+                return "You're surrounded. Pick a direction and pray.";
+
             default:
                 return "";
         }
@@ -152,20 +184,23 @@ public class WaveBannerUI : MonoBehaviour
         switch (waveType)
         {
             case WaveType.Normal:
-                return new Color(0.1f, 0.3f, 0.6f, 0.8f);   // blue-ish
+                return new Color(0.1f, 0.3f, 0.6f, 0.8f);   // blue-ish (baseline)
             case WaveType.Break:
-                return new Color(0.1f, 0.5f, 0.2f, 0.8f);   // green-ish
+                return new Color(0.1f, 0.5f, 0.2f, 0.8f);   // green-ish (safe)
             case WaveType.Power:
-                return new Color(0.7f, 0.5f, 0.1f, 0.8f);   // gold-ish
+                return new Color(0.7f, 0.5f, 0.1f, 0.8f);   // gold-ish (mixed / special)
             case WaveType.MiniBoss:
                 return new Color(0.4f, 0.1f, 0.5f, 0.8f);   // purple-ish
             case WaveType.Boss:
-                return new Color(0.6f, 0.1f, 0.1f, 0.9f);   // red-ish
-            case WaveType.FastDuck:                         
-                return new Color(0.1f, 0.6f, 0.6f, 0.85f);  // teal / speedy vibe
+                return new Color(0.6f, 0.1f, 0.1f, 0.9f);   // strong red
+            case WaveType.FastDuck:
+                return new Color(0.1f, 0.6f, 0.6f, 0.85f);  // teal / speedy
+            case WaveType.AllRanged:
+                return new Color(0.8f, 0.5f, 0.1f, 0.85f);  // orange / “sniper”
+            case WaveType.PanicMix:
+                return new Color(0.8f, 0.2f, 0.2f, 0.9f);   // hot red / danger
             default:
-                return new Color(0f, 0f, 0f, 0.8f);
+                return new Color(0f, 0f, 0f, 0.8f);         // fallback
         }
     }
-
 }
