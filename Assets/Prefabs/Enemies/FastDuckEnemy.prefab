@@ -202,7 +202,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   player: {fileID: 7505426006019706227, guid: 0964ed6b2ed5194439fcf41c67eb1fee, type: 3}
   isKnockedBack: 0
-  damage: 3
+  damage: 2
   attackCooldown: 1
   attackRange: 2.5
   windupTime: 0.25
@@ -221,7 +221,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 92a6f6abb390f6a42aaf071b83dc8dc3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxHealth: 2
+  maxHealth: 1
   healthBar: {fileID: 3098526267212582202}
   hideWhenFull: 1
   destroyOnDeath: 1
@@ -281,7 +281,7 @@ NavMeshAgent:
   m_Enabled: 1
   m_AgentTypeID: 0
   m_Radius: 0.5
-  m_Speed: 10
+  m_Speed: 7
   m_Acceleration: 8
   avoidancePriority: 50
   m_AngularSpeed: 120
@@ -307,7 +307,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   player: {fileID: 0}
   moveByAgent: 0
-  chaseSpeed: 3.5
+  chaseSpeed: 6
   stopDistance: 2
   navMeshSnapDistance: 2
   groundCheck: {fileID: 7841970345826126918}
