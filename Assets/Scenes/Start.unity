@@ -1038,7 +1038,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ccbabcedc4bc5b74aae00758df3e231e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  sceneToLoad: Main_Terrain
+  sceneToLoad: Game
   useAnyKey: 1
   specificKey: 13
   inputDelay: 0.5
