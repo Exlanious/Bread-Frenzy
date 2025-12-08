@@ -8,17 +8,17 @@ public class PlayerAttack : MonoBehaviour
     public KeyCode attackKey = KeyCode.Mouse0;
     public float attackDuration = 0.15f;
     public float attackCooldown = 0.25f;
-    public float knockbackForce = 8f; 
-    public float upwardBias = 0.4f;    
+    public float knockbackForce = 8f;
+    public float upwardBias = 0.4f;
 
     [Header("References (assign in inspector)")]
-    public Collider attackCollider;               
-    public CollisionBroadcaster hitboxBroadcaster; 
+    public Collider attackCollider;
+    public CollisionBroadcaster hitboxBroadcaster;
     [Tooltip("Optional visual mesh to flash when attacking.")]
     public MeshRenderer attackRenderer;
 
     [Header("Hit Filter")]
-    public LayerMask hittableLayers = ~0; 
+    public LayerMask hittableLayers = ~0;
 
     [Header("Stats")]
     public PlayerStats playerStats;
@@ -30,6 +30,17 @@ public class PlayerAttack : MonoBehaviour
     public float projectileSpeed = 15f;
     public float projectileLifetime = 3f;
     public float projectileSpreadAngle = 10f;
+
+    [Header("VFX")]
+    public ParticleSystem hitEffect;
+
+    [Header("Audio")]
+    public AudioSource audioSource;
+
+    public AudioClip swordSwingSound;
+    public AudioClip projectileShootSound;
+    public AudioClip hitSound;
+
 
     // Internal state
     private bool isAttacking;
@@ -87,6 +98,12 @@ public class PlayerAttack : MonoBehaviour
         GameObject slashInstance = Instantiate(slashPrefab, spawnPos, spawnRot);
         slashInstance.transform.SetParent(transform, true);
 
+        // Play sword swing sound
+        if (audioSource != null && swordSwingSound != null)
+        {
+            audioSource.PlayOneShot(swordSwingSound);
+        }
+
         float radiusMult = 1f;
         if (playerStats != null)
             radiusMult = playerStats.radius;
@@ -122,6 +139,13 @@ public class PlayerAttack : MonoBehaviour
                         hittableLayers: hittableLayers
                     );
                 }
+
+                // Play projectile shooting sound
+                if (audioSource != null && projectileShootSound != null)
+                {
+                    audioSource.PlayOneShot(projectileShootSound);
+                }
+
             }
         }
 
@@ -164,7 +188,21 @@ public class PlayerAttack : MonoBehaviour
                 dmg = Mathf.Max(1, Mathf.RoundToInt(playerStats.damage));
 
             float kb = playerStats.knockback;
-            enemyHealth.TakeDamage(dmg, dir * kb); 
+            enemyHealth.TakeDamage(dmg, dir * kb);
+
+            if (hitEffect != null)
+            {
+                hitEffect.transform.position = other.ClosestPoint(transform.position);
+                hitEffect.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+                hitEffect.Play();
+            }
+
+            // Play hit sound
+            if (audioSource != null && hitSound != null)
+            {
+                audioSource.PlayOneShot(hitSound);
+            }
+
         }
     }
 
@@ -207,4 +245,5 @@ public class PlayerAttack : MonoBehaviour
             attackCollider.transform.localScale = baseColliderScale * radiusMult;
         }
     }
+
 }

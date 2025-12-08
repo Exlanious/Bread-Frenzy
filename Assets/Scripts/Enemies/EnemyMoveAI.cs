@@ -19,6 +19,17 @@ public class EnemyMoveAI : MonoBehaviour
     public LayerMask groundMask;
     public bool isGrounded;
 
+    [Header("Duck Ambient")]
+    public AudioSource audioSource;
+    public AudioClip duckAmbient;
+    public float ambientMinDelay = 3f;
+    public float ambientMaxDelay = 7f;
+    public float pitchVariation = 0.15f;
+
+    float ambientTimer;
+
+
+
     NavMeshAgent agent;
     Rigidbody rb;
 
@@ -35,6 +46,7 @@ public class EnemyMoveAI : MonoBehaviour
             var p = GameObject.FindGameObjectWithTag("Player");
             if (p != null) player = p.transform;
         }
+        ambientTimer = Random.Range(ambientMinDelay, ambientMaxDelay);
     }
 
     void Start()
@@ -59,6 +71,7 @@ public class EnemyMoveAI : MonoBehaviour
 
     void Update()
     {
+        HandleAmbientSound();
         if (groundCheck != null)
         {
             isGrounded = Physics.CheckSphere(groundCheck.position, groundDistance, groundMask);
@@ -117,6 +130,22 @@ public class EnemyMoveAI : MonoBehaviour
         {
             loggedFirstDestination = true;
             Debug.Log($"{name}: EnemyMoveAI - SetDestination({dest}) success={ok}, isOnNavMesh={agent.isOnNavMesh}, hasPath={agent.hasPath}");
+        }
+    }
+
+    void HandleAmbientSound()
+    {
+        if (duckAmbient == null) return;
+
+        ambientTimer -= Time.deltaTime;
+
+        if (ambientTimer <= 0f)
+        {
+            // Slight pitch variation
+            audioSource.pitch = 1f + Random.Range(-pitchVariation, pitchVariation);
+            audioSource.PlayOneShot(duckAmbient);
+
+            ambientTimer = Random.Range(ambientMinDelay, ambientMaxDelay);
         }
     }
 

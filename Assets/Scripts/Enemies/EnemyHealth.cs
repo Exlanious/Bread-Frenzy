@@ -19,7 +19,7 @@ public class EnemyHealth : MonoBehaviour
 
     [Header("Hit Feedback")]
     public bool enableHitFlash = true;
-    public Renderer meshRenderer;              
+    public Renderer meshRenderer;
     public Color hitColor = Color.red;
     public float flashDuration = 0.08f;
 
@@ -30,16 +30,22 @@ public class EnemyHealth : MonoBehaviour
     [Header("Knockback")]
     public bool enableKnockback = true;
     public float knockbackDistance = 2f;
-    public float knockbackDuration = 0.2f;  
+    public float knockbackDuration = 0.2f;
 
-    public float verticalBump = 0.4f;        
+    public float verticalBump = 0.4f;
     public AnimationCurve knockbackCurve = AnimationCurve.EaseInOut(0, 0, 1, 1);
+
+    [Header("Audio")]
+    public AudioSource audioSource;
+    public AudioClip hitSound;
+    public AudioClip deathSound;
+
 
 
     public event Action<EnemyHealth> OnEnemyDied;
 
     [Header("XP Settings")]
-    public int xpValue = 1;  
+    public int xpValue = 1;
     [Header("XP Drop")]
     public GameObject xpOrbPrefab;
 
@@ -84,6 +90,11 @@ public class EnemyHealth : MonoBehaviour
 
     public void TakeDamage(int amount, Vector3 hitDirection)
     {
+        // Play hit sound
+        if (audioSource != null && hitSound != null)
+            audioSource.PlayOneShot(hitSound);
+
+
         if (currentHealth <= 0) return;
 
         currentHealth -= amount;
@@ -198,6 +209,14 @@ public class EnemyHealth : MonoBehaviour
 
     private void Die()
     {
+
+        float deathSoundLength = 0f;
+        if (audioSource != null && deathSound != null)
+        {
+            audioSource.PlayOneShot(deathSound);
+            deathSoundLength = deathSound.length;
+        }
+
         if (healthBar != null)
             healthBar.gameObject.SetActive(false);
 
@@ -245,7 +264,7 @@ public class EnemyHealth : MonoBehaviour
 
     private IEnumerator DeathRoutine()
     {
-        float duration = 0.3f;         
+        float duration = 0.3f;
         float elapsed = 0f;
 
         Vector3 startScale = transform.localScale;

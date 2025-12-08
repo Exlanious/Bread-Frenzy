@@ -18,7 +18,7 @@ public class PlayerHealth : MonoBehaviour
     public bool debugLogs = false;
 
     [Header("Damage Timing")]
-    public float invincibilityDuration = 0.5f;   
+    public float invincibilityDuration = 0.5f;
     private float lastDamageTime = -999f;
 
     [Header("Feedback")]
@@ -29,7 +29,11 @@ public class PlayerHealth : MonoBehaviour
     [Header("Invincibility Visuals")]
     public float hurtFlashDuration = 0.15f;
     [Range(0f, 1f)]
-    public float iframeAlpha = 0.4f;      
+    public float iframeAlpha = 0.4f;
+
+    [Header("Effects")]
+    public ParticleSystem healEffect;
+
 
     private bool flashing = false;
     private bool inHitstop = false;
@@ -155,6 +159,11 @@ public class PlayerHealth : MonoBehaviour
         currentHealth = Mathf.Min(currentHealth + amount, maxHealth);
         OnHealthChanged?.Invoke(currentHealth, maxHealth);
         UpdateHealthBar();
+
+        if (healEffect != null)
+        {
+            healEffect.Play();
+        }
     }
 
     private void UpdateHealthBar()

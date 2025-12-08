@@ -11,19 +11,24 @@ public class PlayerXP : MonoBehaviour
     public float xpGrowthFactor = 1.35f;
 
     [Header("References")]
-    public UpgradeSelector upgradeUI;  
-    public XPBarUI xpBarUI;         
+    public UpgradeSelector upgradeUI;
+    public XPBarUI xpBarUI;
 
     [Header("Level Scaling")]
     public Transform playerModel;
-    public float scalePerLevel = 0.15f;  
+    public float scalePerLevel = 0.15f;
     public Vector3 baseScale = Vector3.one;
-   
+
+    [Header("Audio")]
+    public AudioSource audioSource;
+    public AudioClip xpGainSound;
+    public AudioClip levelUpSound;
+
 
     // Internal
-    private int xpQueue = 0;           
+    private int xpQueue = 0;
     private bool isAnimatingXP = false;
-    private int totalXP = 0;          
+    private int totalXP = 0;
 
     void Awake()
     {
@@ -41,11 +46,14 @@ public class PlayerXP : MonoBehaviour
         if (playerModel != null)
             baseScale = playerModel.localScale;
     }
-    
+
     public void GainXP(int amount)
     {
         totalXP += amount;
         xpQueue += amount;
+
+        if (audioSource != null && xpGainSound != null)
+            audioSource.PlayOneShot(xpGainSound);
 
         if (!isAnimatingXP)
             StartCoroutine(ProcessXPQueue());
@@ -63,7 +71,7 @@ public class PlayerXP : MonoBehaviour
             xpQueue -= chunk;
 
             float startXP = currentXP;
-            float endXP   = currentXP + chunk;
+            float endXP = currentXP + chunk;
 
             float duration = 0.35f;
             float t = 0f;
@@ -84,7 +92,7 @@ public class PlayerXP : MonoBehaviour
             if (currentXP >= xpToNextLevel)
             {
                 currentXP -= xpToNextLevel;
-                LevelUp();          
+                LevelUp();
             }
         }
 
@@ -94,6 +102,10 @@ public class PlayerXP : MonoBehaviour
     private void LevelUp()
     {
         level++;
+
+        if (audioSource != null && levelUpSound != null)
+            audioSource.PlayOneShot(levelUpSound);
+
         ApplyLevelScaling();
 
         xpToNextLevel = Mathf.RoundToInt(xpToNextLevel * xpGrowthFactor);

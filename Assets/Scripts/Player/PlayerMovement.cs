@@ -56,6 +56,14 @@ public class PlayerMovement : MonoBehaviour
     private float lastJumpPressedTime;
     private bool jumpHeld;
 
+    [Header("Dash VFX")]
+    public ParticleSystem dashEffect;
+
+    [Header("Dash Audio")]
+    public AudioSource audioSource;
+    public AudioClip dashSound;
+
+
     void Start()
     {
         rb = GetComponent<Rigidbody>();
@@ -169,17 +177,17 @@ public class PlayerMovement : MonoBehaviour
         }
 
         Vector3 forward = cameraTransform != null ? cameraTransform.forward : Vector3.forward;
-        Vector3 right   = cameraTransform != null ? cameraTransform.right   : Vector3.right;
+        Vector3 right = cameraTransform != null ? cameraTransform.right : Vector3.right;
 
         forward.y = 0f;
-        right.y   = 0f;
+        right.y = 0f;
         forward.Normalize();
         right.Normalize();
 
         Vector3 inputDir = (forward * input.y + right * input.x);
         inputDir.Normalize();
 
-        Vector3 currentVel       = rb.linearVelocity;
+        Vector3 currentVel = rb.linearVelocity;
         Vector3 targetHorizontal = inputDir * moveSpeed;
 
         if (!isGrounded)
@@ -248,6 +256,17 @@ public class PlayerMovement : MonoBehaviour
     {
         canDash = false;
         isDashing = true;
+
+        //  Play dash sound effect
+        if (audioSource != null && dashSound != null)
+            audioSource.PlayOneShot(dashSound);
+
+        //  Play dash particle effect
+        if (dashEffect != null)
+        {
+            dashEffect.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            dashEffect.Play();
+        }
 
         if (dashBroadcaster != null)
         {

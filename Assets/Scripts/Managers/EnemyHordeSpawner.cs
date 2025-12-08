@@ -161,8 +161,8 @@ public class EnemyHordeSpawner : MonoBehaviour
         if (basicDuckPrefab != null && fastDuckPrefab == null && tankDuckPrefab == null && rangedDuckPrefab == null)
             return basicDuckPrefab;
 
-        float fastChance   = Mathf.Clamp01(fastDuckChance);
-        float tankChance   = Mathf.Clamp01(tankDuckChance);
+        float fastChance = Mathf.Clamp01(fastDuckChance);
+        float tankChance = Mathf.Clamp01(tankDuckChance);
         float rangedChance = Mathf.Clamp01(rangedDuckChance);
 
         float basicChance = Mathf.Clamp01(1f - fastChance - tankChance - rangedChance);
@@ -186,8 +186,8 @@ public class EnemyHordeSpawner : MonoBehaviour
             return basicDuckPrefab;
 
         if (rangedDuckPrefab != null) return rangedDuckPrefab;
-        if (fastDuckPrefab   != null) return fastDuckPrefab;
-        if (tankDuckPrefab   != null) return tankDuckPrefab;
+        if (fastDuckPrefab != null) return fastDuckPrefab;
+        if (tankDuckPrefab != null) return tankDuckPrefab;
 
         return null;
     }
@@ -235,4 +235,10 @@ public class EnemyHordeSpawner : MonoBehaviour
     {
         aliveEnemies = Mathf.Max(0, aliveEnemies - 1);
     }
+
+    public bool CanSpawn()
+    {
+        return aliveEnemies < maxAliveEnemies;
+    }
+
 }

@@ -48,6 +48,8 @@ GameObject:
   - component: {fileID: 6822693730727613108}
   - component: {fileID: 1408392613161408671}
   - component: {fileID: 456923281973315341}
+  - component: {fileID: -5553741631486169791}
+  - component: {fileID: -6111773986477908090}
   m_Layer: 0
   m_Name: RangedDuck
   m_TagString: Untagged
@@ -223,6 +225,11 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 0
   isGrounded: 0
+  audioSource: {fileID: -6111773986477908090}
+  duckAmbient: {fileID: 8300000, guid: ce792019ef30afe49977132023e112c6, type: 3}
+  ambientMinDelay: 2
+  ambientMaxDelay: 6
+  pitchVariation: 0.15
 --- !u!114 &1408392613161408671
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -274,6 +281,9 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+  audioSource: {fileID: -6111773986477908090}
+  hitSound: {fileID: 8300000, guid: 3e11cc6f47d604941af6b0e7e69aa7ba, type: 3}
+  deathSound: {fileID: 8300000, guid: 49eef9a6fa598cf4097c510599cf09c7, type: 3}
   xpValue: 5
   xpOrbPrefab: {fileID: 8156377634253175627, guid: 68c1c65607cfaca4182b48ded216c8f7, type: 3}
 --- !u!114 &456923281973315341
@@ -301,6 +311,116 @@ MonoBehaviour:
   firePoint: {fileID: 1454040919789142620}
   projectileSpeed: 30
   verticalAimOffset: 0.5
+--- !u!114 &-5553741631486169791
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6682682836454495409}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 169aa7a003e5c5b4b83a448ac9cd7581, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  spawner: {fileID: 0}
+--- !u!82 &-6111773986477908090
+AudioSource:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6682682836454495409}
+  m_Enabled: 1
+  serializedVersion: 4
+  OutputAudioMixerGroup: {fileID: 0}
+  m_audioClip: {fileID: 0}
+  m_Resource: {fileID: 0}
+  m_PlayOnAwake: 0
+  m_Volume: 1
+  m_Pitch: 1
+  Loop: 0
+  Mute: 0
+  Spatialize: 0
+  SpatializePostEffects: 0
+  Priority: 128
+  DopplerLevel: 1
+  MinDistance: 1
+  MaxDistance: 500
+  Pan2D: 0
+  rolloffMode: 0
+  BypassEffects: 0
+  BypassListenerEffects: 0
+  BypassReverbZones: 0
+  rolloffCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 1
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  panLevelCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  spreadCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  reverbZoneMixCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
 --- !u!1 &6772518182031529893
 GameObject:
   m_ObjectHideFlags: 0

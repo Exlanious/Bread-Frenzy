@@ -9,20 +9,29 @@ public class UpgradeSelector : MonoBehaviour
     [Header("UI Elements")]
     [SerializeField] private Transform cardCanvas;
     [SerializeField] private Button SkipButton;
-    [SerializeField] private Image backgroundImage; 
-    [SerializeField] private CanvasGroup uiCanvasGroup;  
+    [SerializeField] private Image backgroundImage;
+    [SerializeField] private CanvasGroup uiCanvasGroup;
 
     [Header("Card Styling")]
     [SerializeField] private TMP_FontAsset upgradeFont;
 
     [Header("Settings")]
     [SerializeField] private int numGeneratedCards = 3;
-    [SerializeField] private float fadeDuration = 0.18f;          
-    [SerializeField] private float clickDelayAfterFade = 0.05f;    
+    [SerializeField] private float fadeDuration = 0.18f;
+    [SerializeField] private float clickDelayAfterFade = 0.05f;
 
     [Header("Ability System")]
     [SerializeField] private AbilityUpgradeSelector abilitySelector;
     [SerializeField] private AbilityManager abilityManager;
+
+    [Header("Audio")]
+    public AudioSource audioSource;
+    public AudioClip cardSelectSound;
+
+
+
+    private AudioSource sfxSource;
+
 
     private Queue<int> upgradeQueue = new Queue<int>();
     private bool isShowingUpgrade = false;
@@ -42,7 +51,7 @@ public class UpgradeSelector : MonoBehaviour
             backgroundImage = GetComponent<Image>();
 
         if (uiCanvasGroup == null)
-            uiCanvasGroup = GetComponent<CanvasGroup>();   
+            uiCanvasGroup = GetComponent<CanvasGroup>();
 
         if (SkipButton != null)
         {
@@ -55,7 +64,7 @@ public class UpgradeSelector : MonoBehaviour
 
     public void QueueUpgrade()
     {
-        upgradeQueue.Enqueue(1); 
+        upgradeQueue.Enqueue(1);
         TryShowNextUpgrade();
     }
 
@@ -156,11 +165,11 @@ public class UpgradeSelector : MonoBehaviour
         var rt = cardObj.GetComponent<RectTransform>();
         rt.anchorMin = new Vector2(0.5f, 0.5f);
         rt.anchorMax = new Vector2(0.5f, 0.5f);
-        rt.pivot     = new Vector2(0.5f, 0.5f);
+        rt.pivot = new Vector2(0.5f, 0.5f);
         rt.sizeDelta = new Vector2(550f, 720f);
 
         var layout = cardObj.AddComponent<LayoutElement>();
-        layout.preferredWidth  = 550f;
+        layout.preferredWidth = 550f;
         layout.preferredHeight = 720f;
 
         GameObject textObj = new GameObject("Label");
@@ -177,7 +186,7 @@ public class UpgradeSelector : MonoBehaviour
         var rtText = text.GetComponent<RectTransform>();
         rtText.anchorMin = Vector2.zero;
         rtText.anchorMax = Vector2.one;
-        rtText.offsetMin = new Vector2(40, 40);  
+        rtText.offsetMin = new Vector2(40, 40);
         rtText.offsetMax = new Vector2(-40, -40);
 
         var hover = cardObj.AddComponent<UpgradeCardHover>();
@@ -198,6 +207,12 @@ public class UpgradeSelector : MonoBehaviour
             {
                 abilityManager.ApplyUpgrade(chosen);
             }
+
+            if (audioSource != null && cardSelectSound != null)
+            {
+                audioSource.PlayOneShot(cardSelectSound);
+            }
+
         }
 
         upgradeQueue.Dequeue();
@@ -207,6 +222,12 @@ public class UpgradeSelector : MonoBehaviour
     public void OnSkipPressed()
     {
         Debug.Log("Upgrade skipped.");
+
+        if (audioSource != null && cardSelectSound != null)
+        {
+            audioSource.PlayOneShot(cardSelectSound);
+        }
+
 
         if (upgradeQueue.Count > 0)
             upgradeQueue.Dequeue();
