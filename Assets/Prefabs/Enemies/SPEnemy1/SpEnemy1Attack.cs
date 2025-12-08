@@ -17,6 +17,12 @@ public class SpEnemy1Attack : EnemyAttack
     public float initialDelay = 5f;
     public float attackInterval = 5f;
 
+    [Header("Audio")]
+    public AudioSource audioSource;
+    public AudioClip attackBounceSound; // for Attack1 & normal bounces
+    public AudioClip finalSmashSound;   // for final smash
+
+
     // -------------------------
     // Attack 1 (1 bounce)
     // -------------------------
@@ -152,6 +158,12 @@ public class SpEnemy1Attack : EnemyAttack
         ai.SetPhysicsMode(false);
         attack1Particles?.Play();
         trackPlayer = false;
+
+        // Play Attack1 sound
+        if (audioSource != null && attackBounceSound != null)
+        {
+            audioSource.PlayOneShot(attackBounceSound);
+        }
     }
 
     private void Attack1OnHit(Collider other)
@@ -216,13 +228,23 @@ public class SpEnemy1Attack : EnemyAttack
         if (isFinalSmash)
         {
             smashParticles?.Play();
+
+            // Play final smash sound
+            if (audioSource != null && finalSmashSound != null)
+                audioSource.PlayOneShot(finalSmashSound);
         }
         else
         {
             bounceCounter++;
+
+            // Play bounce sound
+            if (audioSource != null && attackBounceSound != null)
+                audioSource.PlayOneShot(attackBounceSound);
         }
+
         trackPlayer = false;
     }
+
 
     // Animation Event: Attack2 Finished
     public void A2_End()
