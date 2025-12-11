@@ -433,6 +433,11 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 8594828271151693437, guid: d6d607f94e8ef44fc9506c8fe5168eae, type: 3}
   m_PrefabInstance: {fileID: 119966905}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &121535332 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 2526443729133337624, guid: 0964ed6b2ed5194439fcf41c67eb1fee, type: 3}
+  m_PrefabInstance: {fileID: 1895354356}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &123027459
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -11188,6 +11193,10 @@ PrefabInstance:
       propertyPath: playerRenderer
       value: 
       objectReference: {fileID: 2083974782}
+    - target: {fileID: 9139952844249505562, guid: 0964ed6b2ed5194439fcf41c67eb1fee, type: 3}
+      propertyPath: heldBaguette
+      value: 
+      objectReference: {fileID: 121535332}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

@@ -2,39 +2,25 @@ using UnityEngine;
 
 public class SlashLifetime : MonoBehaviour
 {
-    [Header("Timing")]
     public float lifetime = 0.25f;
-
-    [Header("Swing")]
-    [Tooltip("Base sweep angle in degrees (used for the left side and base right side).")]
-    public float swingAngle = 160f;
-
-    [Tooltip("How much further to go to the right, relative to the left side.\n" +
-             "1 = symmetric, >1 = further right.")]
-    public float rightSideMultiplier = 1.2f;
-
-    [Header("Fade")]
-    [Tooltip("If true, the slash fades/thins out over its lifetime.")]
+    public float startAngle = -110f;
+    public float endAngle = 0f;
     public bool fadeOverTime = true;
 
-    private float elapsed;
+    float elapsed;
 
-    // World-space pivot + rotation at attack start
-    private Vector3 pivotPosition;
-    private Quaternion baseWorldRotation;
+    Vector3 localPivotPosition;
+    Quaternion baseLocalRotation;
 
-    // Trail / material stuff for fading
-    private TrailRenderer trail;
-    private Material trailMat;
-    private Color baseColor;
-    private float initialWidthMultiplier = 1f;
+    TrailRenderer trail;
+    Material trailMat;
+    Color baseColor;
+    float initialWidthMultiplier = 1f;
 
     void Start()
     {
-        pivotPosition = transform.position;
-        baseWorldRotation = transform.rotation;
-
-        transform.SetParent(null, true);
+        localPivotPosition = transform.localPosition;
+        baseLocalRotation  = transform.localRotation;
 
         trail = GetComponent<TrailRenderer>();
         if (trail != null)
@@ -54,9 +40,8 @@ public class SlashLifetime : MonoBehaviour
             trail.Clear();
         }
 
-        float startAngle = -swingAngle * 0.5f;
-        transform.position = pivotPosition;
-        transform.rotation = baseWorldRotation * Quaternion.Euler(0f, startAngle, 0f);
+        transform.localPosition = localPivotPosition;
+        transform.localRotation = baseLocalRotation * Quaternion.Euler(0f, startAngle, 0f);
 
         Destroy(gameObject, lifetime);
     }
@@ -66,12 +51,10 @@ public class SlashLifetime : MonoBehaviour
         elapsed += Time.deltaTime;
         float t = Mathf.Clamp01(elapsed / lifetime);
 
-        float startAngle = -swingAngle * 0.5f;
-        float endAngle   = swingAngle * 0.5f * rightSideMultiplier;
-        float angle      = Mathf.Lerp(startAngle, endAngle, t);
+        float angle = Mathf.Lerp(startAngle, endAngle, t);
 
-        transform.position = pivotPosition; 
-        transform.rotation = baseWorldRotation * Quaternion.Euler(0f, angle, 0f);
+        transform.localPosition = localPivotPosition;
+        transform.localRotation = baseLocalRotation * Quaternion.Euler(0f, angle, 0f);
 
         if (fadeOverTime && trail != null && trailMat != null)
         {

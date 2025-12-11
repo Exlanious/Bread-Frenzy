@@ -230,8 +230,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   lifetime: 0.2
-  swingAngle: 160
-  rightSideMultiplier: 1.2
+  startAngle: -110
+  endAngle: 110
   fadeOverTime: 1
 --- !u!1001 &1970901767816994599
 PrefabInstance:

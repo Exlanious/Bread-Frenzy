@@ -36,6 +36,8 @@ public class PlayerAttack : MonoBehaviour
 
     [Header("Audio")]
     public AudioSource audioSource;
+    [Header("Weapon Visuals")]
+    public GameObject heldBaguette;
 
     public AudioClip swordSwingSound;
     public AudioClip projectileShootSound;
@@ -92,13 +94,15 @@ public class PlayerAttack : MonoBehaviour
         canAttack = false;
         isAttacking = true;
 
+        if (heldBaguette != null)
+            heldBaguette.SetActive(false);
+
         Vector3 spawnPos = transform.position + Vector3.up * 0.1f;
         Quaternion spawnRot = Quaternion.LookRotation(transform.forward, Vector3.up);
 
         GameObject slashInstance = Instantiate(slashPrefab, spawnPos, spawnRot);
         slashInstance.transform.SetParent(transform, true);
 
-        // Play sword swing sound
         if (audioSource != null && swordSwingSound != null)
         {
             audioSource.PlayOneShot(swordSwingSound);
@@ -140,12 +144,10 @@ public class PlayerAttack : MonoBehaviour
                     );
                 }
 
-                // Play projectile shooting sound
                 if (audioSource != null && projectileShootSound != null)
                 {
                     audioSource.PlayOneShot(projectileShootSound);
                 }
-
             }
         }
 
@@ -165,9 +167,12 @@ public class PlayerAttack : MonoBehaviour
         }
 
         yield return new WaitForSeconds(attackCooldown);
+
+        if (heldBaguette != null)
+            heldBaguette.SetActive(true);
+
         canAttack = true;
     }
-
 
     private void OnHitboxTriggerEnter(Collider other)
     {
