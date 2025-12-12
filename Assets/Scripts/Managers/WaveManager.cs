@@ -80,6 +80,7 @@ public class WaveManager : MonoBehaviour
     public int breakWaveHealAmount = 1;
 
     [SerializeField] private PlayerHealth playerHealth;
+    [SerializeField] private Transform playerTransform;
 
     [Header("Scaling vs Wave & Player")]
     [Tooltip("Extra enemy max health per wave (e.g. 0.15 = +15% per wave).")]
@@ -200,6 +201,17 @@ public class WaveManager : MonoBehaviour
             if (playerHealth == null)
             {
                 Debug.LogWarning("[WaveManager] No PlayerHealth found. Break wave healing will be disabled.");
+            }
+        }
+
+        if (playerTransform == null)
+        {
+            if (playerHealth != null) playerTransform = playerHealth.transform;
+            else
+            {
+                GameObject p = GameObject.FindGameObjectWithTag("Player");
+                if (p != null) playerTransform = p.transform;
+                else Debug.LogWarning("[WaveManager] No Player transform found. Boss attack targeting may break.");
             }
         }
 
@@ -333,6 +345,7 @@ public class WaveManager : MonoBehaviour
                 {
                     Transform spawnPoint = GetRandomBossSpawnPoint();
                     enemy = Instantiate(bossPrefab, spawnPoint.position, spawnPoint.rotation);
+                    ConfigureBossRefs(enemy);
                 }
                 else
                 {
@@ -603,6 +616,19 @@ public class WaveManager : MonoBehaviour
         }
     }
 
+    private void ConfigureBossRefs(GameObject enemy)
+    {
+        if (enemy == null) return;
+
+        var bossAttack = enemy.GetComponent<SpEnemy1Attack>();
+        if (bossAttack == null) return;
+
+        bossAttack.InitializeTarget(playerTransform, playerHealth);
+
+        if (bossAttack.audioSource == null)
+            bossAttack.audioSource = enemy.GetComponent<AudioSource>();
+    }
+
     private void HandleEnemyDied(EnemyHealth health)
     {
         if (isShuttingDown || !this || !isActiveAndEnabled)
@@ -697,6 +723,7 @@ public class WaveManager : MonoBehaviour
             {
                 Transform spawnPoint = GetRandomBossSpawnPoint();
                 enemy = Instantiate(bossPrefab, spawnPoint.position, spawnPoint.rotation);
+                ConfigureBossRefs(enemy);
             }
             else
             {

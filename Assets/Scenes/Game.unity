@@ -560,6 +560,7 @@ MonoBehaviour:
   playerXP: {fileID: 1540315631}
   breakWaveHealAmount: 1
   playerHealth: {fileID: 1540315636}
+  playerTransform: {fileID: 0}
   healthPerWave: 0.15
   healthPerLevel: 0.1
   damagePerWave: 0.04
@@ -572,7 +573,7 @@ MonoBehaviour:
   bossSpawnPoints: []
   audioSource: {fileID: 124158696}
   waveStartSound: {fileID: 8300000, guid: e6ce56a8af7e45a4a90ba2db42a10549, type: 3}
-  enableSampleWaveHotkeys: 0
+  enableSampleWaveHotkeys: 1
   sampleNormalWave:
     waveName: Sample Normal
     waveType: 0
