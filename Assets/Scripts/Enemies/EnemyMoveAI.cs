@@ -26,26 +26,41 @@ public class EnemyMoveAI : MonoBehaviour
     public float ambientMaxDelay = 7f;
     public float pitchVariation = 0.15f;
 
+    [Header("Stuck Recovery")]
+    public bool enableStuckRecovery = true;
+    public LayerMask stuckWorldMask = ~0;
+    public float stuckMoveEpsilon = 0.03f;
+    public float stuckTimeToRecover = 0.6f;
+    public float recoverCooldown = 0.4f;
+    public int maxPushIterations = 6;
+    public float pushExtra = 0.02f;
+
     float ambientTimer;
-
-
 
     NavMeshAgent agent;
     Rigidbody rb;
+    Collider selfCol;
 
     bool loggedStartState;
     bool loggedFirstDestination;
+
+    Vector3 _lastPos;
+    float _stuckTimer;
+    float _recoverCooldownTimer;
+    Vector3 _lastDest;
 
     void Awake()
     {
         agent = GetComponent<NavMeshAgent>();
         rb = GetComponent<Rigidbody>();
+        selfCol = GetComponent<Collider>();
 
         if (player == null)
         {
             var p = GameObject.FindGameObjectWithTag("Player");
             if (p != null) player = p.transform;
         }
+
         ambientTimer = Random.Range(ambientMinDelay, ambientMaxDelay);
     }
 
@@ -53,6 +68,11 @@ public class EnemyMoveAI : MonoBehaviour
     {
         SnapToNavMesh();
         LogStartState();
+
+        _lastPos = transform.position;
+        _stuckTimer = 0f;
+        _recoverCooldownTimer = 0f;
+        _lastDest = transform.position;
     }
 
     void OnEnable()
@@ -61,6 +81,11 @@ public class EnemyMoveAI : MonoBehaviour
 
         if (agent != null && agent.enabled && agent.isOnNavMesh)
             agent.isStopped = false;
+
+        _lastPos = transform.position;
+        _stuckTimer = 0f;
+        _recoverCooldownTimer = 0f;
+        _lastDest = transform.position;
     }
 
     void OnDisable()
@@ -72,15 +97,12 @@ public class EnemyMoveAI : MonoBehaviour
     void Update()
     {
         HandleAmbientSound();
+
         if (groundCheck != null)
-        {
             isGrounded = Physics.CheckSphere(groundCheck.position, groundDistance, groundMask);
-        }
 
         if (!moveByAgent)
-        {
             return;
-        }
 
         if (agent == null)
         {
@@ -117,6 +139,8 @@ public class EnemyMoveAI : MonoBehaviour
         if (dist <= stopDistance)
         {
             agent.isStopped = true;
+            _stuckTimer = 0f;
+            _lastPos = transform.position;
             return;
         }
 
@@ -124,6 +148,7 @@ public class EnemyMoveAI : MonoBehaviour
         agent.speed = chaseSpeed;
 
         Vector3 dest = player.position;
+        _lastDest = dest;
         bool ok = agent.SetDestination(dest);
 
         if (!loggedFirstDestination)
@@ -131,6 +156,114 @@ public class EnemyMoveAI : MonoBehaviour
             loggedFirstDestination = true;
             Debug.Log($"{name}: EnemyMoveAI - SetDestination({dest}) success={ok}, isOnNavMesh={agent.isOnNavMesh}, hasPath={agent.hasPath}");
         }
+
+        if (enableStuckRecovery)
+            StuckRecoveryTick();
+        else
+            _lastPos = transform.position;
+    }
+
+    void StuckRecoveryTick()
+    {
+        if (_recoverCooldownTimer > 0f)
+        {
+            _recoverCooldownTimer -= Time.deltaTime;
+            _lastPos = transform.position;
+            return;
+        }
+
+        if (agent.isStopped || agent.pathPending)
+        {
+            _stuckTimer = 0f;
+            _lastPos = transform.position;
+            return;
+        }
+
+        Vector3 cur = transform.position;
+        float moved = Vector3.Distance(cur, _lastPos);
+
+        bool wantsToMove = agent.desiredVelocity.sqrMagnitude > 0.05f;
+        bool actuallyMoving = agent.velocity.sqrMagnitude > 0.01f;
+
+        if (wantsToMove && !actuallyMoving && moved <= stuckMoveEpsilon)
+        {
+            _stuckTimer += Time.deltaTime;
+            if (_stuckTimer >= stuckTimeToRecover)
+            {
+                bool freed = PushOutOfColliders();
+                SnapToNavMesh();
+
+                if (agent.isOnNavMesh)
+                {
+                    agent.ResetPath();
+                    agent.SetDestination(_lastDest);
+                }
+
+                _recoverCooldownTimer = recoverCooldown;
+                _stuckTimer = 0f;
+
+                if (!freed)
+                {
+                    // still do cooldown + path reset; nothing else needed
+                }
+            }
+        }
+        else
+        {
+            _stuckTimer = 0f;
+        }
+
+        _lastPos = cur;
+    }
+
+    bool PushOutOfColliders()
+    {
+        if (selfCol == null)
+            selfCol = GetComponent<Collider>();
+
+        if (selfCol == null)
+            return false;
+
+        bool anyResolved = false;
+
+        for (int iter = 0; iter < Mathf.Max(1, maxPushIterations); iter++)
+        {
+            Bounds b = selfCol.bounds;
+            Vector3 center = b.center;
+            Vector3 halfExtents = b.extents;
+
+            Collider[] hits = Physics.OverlapBox(center, halfExtents, transform.rotation, stuckWorldMask, QueryTriggerInteraction.Ignore);
+            bool resolvedThisIter = false;
+
+            for (int i = 0; i < hits.Length; i++)
+            {
+                Collider other = hits[i];
+                if (other == null) continue;
+                if (other == selfCol) continue;
+                if (!other.enabled) continue;
+                if (other.isTrigger) continue;
+
+                Vector3 dir;
+                float dist;
+                bool overlapped = Physics.ComputePenetration(
+                    selfCol, transform.position, transform.rotation,
+                    other, other.transform.position, other.transform.rotation,
+                    out dir, out dist
+                );
+
+                if (overlapped && dist > 0f)
+                {
+                    transform.position += dir * (dist + pushExtra);
+                    resolvedThisIter = true;
+                    anyResolved = true;
+                }
+            }
+
+            if (!resolvedThisIter)
+                break;
+        }
+
+        return anyResolved;
     }
 
     void HandleAmbientSound()
@@ -141,10 +274,11 @@ public class EnemyMoveAI : MonoBehaviour
 
         if (ambientTimer <= 0f)
         {
-            // Slight pitch variation
-            audioSource.pitch = 1f + Random.Range(-pitchVariation, pitchVariation);
-            audioSource.PlayOneShot(duckAmbient);
-
+            if (audioSource != null)
+            {
+                audioSource.pitch = 1f + Random.Range(-pitchVariation, pitchVariation);
+                audioSource.PlayOneShot(duckAmbient);
+            }
             ambientTimer = Random.Range(ambientMinDelay, ambientMaxDelay);
         }
     }
@@ -164,7 +298,6 @@ public class EnemyMoveAI : MonoBehaviour
         }
     }
 
-    // other scripts call this, so keep it
     public void SetPhysicsMode(bool usePhysics)
     {
         if (agent == null || rb == null) return;

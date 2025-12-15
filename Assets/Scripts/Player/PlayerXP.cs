@@ -47,6 +47,14 @@ public class PlayerXP : MonoBehaviour
             baseScale = playerModel.localScale;
     }
 
+    void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.Alpha9))
+        {
+            DebugSetLevel(10);
+        }
+    }
+
     public void GainXP(int amount)
     {
         totalXP += amount;
@@ -159,6 +167,24 @@ public class PlayerXP : MonoBehaviour
         }
 
         playerModel.localScale = target;
+    }
+    
+    void DebugSetLevel(int targetLevel)
+    {
+        targetLevel = Mathf.Max(1, targetLevel);
+
+        if (level >= targetLevel)
+            return;
+
+        Debug.Log($"[DEBUG] Forcing player level to {targetLevel}");
+
+        while (level < targetLevel)
+        {
+            LevelUp();
+        }
+
+        currentXP = 0;
+        UpdateXPUI();
     }
 
 }
