@@ -17,6 +17,10 @@ public class RunStats : MonoBehaviour
     [Tooltip("Total damage taken by the player this run.")]
     public int damageTaken;
 
+    [Header("Audio")]
+    public AudioSource audioSource;
+    public AudioClip gameEndClip;
+
     private float runStartTime;
     private float runEndTime;
     private bool runEnded;
@@ -52,6 +56,12 @@ public class RunStats : MonoBehaviour
 
         runEnded = true;
         runEndTime = Time.time;
+
+        // Play game-end sound
+        if (audioSource != null && gameEndClip != null)
+        {
+            audioSource.PlayOneShot(gameEndClip);
+        }
     }
 
     public float GetRunDurationSeconds()

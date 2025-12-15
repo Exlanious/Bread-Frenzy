@@ -19,7 +19,7 @@ public class EnemyHealth : MonoBehaviour
 
     [Header("Hit Feedback")]
     public bool enableHitFlash = true;
-    public Renderer meshRenderer;              
+    public Renderer meshRenderer;
     public Color hitColor = Color.red;
     public float flashDuration = 0.08f;
 
@@ -30,16 +30,24 @@ public class EnemyHealth : MonoBehaviour
     [Header("Knockback")]
     public bool enableKnockback = true;
     public float knockbackDistance = 2f;
-    public float knockbackDuration = 0.2f;  
+    public float knockbackDuration = 0.2f;
 
-    public float verticalBump = 0.4f;        
+    public float verticalBump = 0.4f;
     public AnimationCurve knockbackCurve = AnimationCurve.EaseInOut(0, 0, 1, 1);
+
+    [Header("Audio")]
+    public AudioSource audioSource;
+    public AudioClip hitSound;
+    public AudioClip deathSound;
+
 
 
     public event Action<EnemyHealth> OnEnemyDied;
 
     [Header("XP Settings")]
-    public int xpValue = 1;  
+    public int xpValue = 1;
+    [Header("XP Drop")]
+    public GameObject xpOrbPrefab;
 
     public static System.Action<int> OnAnyEnemyDied;
 
@@ -82,6 +90,11 @@ public class EnemyHealth : MonoBehaviour
 
     public void TakeDamage(int amount, Vector3 hitDirection)
     {
+        // Play hit sound
+        if (audioSource != null && hitSound != null)
+            audioSource.PlayOneShot(hitSound);
+
+
         if (currentHealth <= 0) return;
 
         currentHealth -= amount;
@@ -147,6 +160,10 @@ public class EnemyHealth : MonoBehaviour
         if (inKnockback) yield break;
         inKnockback = true;
 
+        var attacks = GetComponents<IEnemyAttack>();
+        foreach (var atk in attacks)
+            atk.SetKnockedBack(true);
+
         hitDirection.y = 0f;
         hitDirection.Normalize();
 
@@ -158,11 +175,9 @@ public class EnemyHealth : MonoBehaviour
         while (elapsed < knockbackDuration)
         {
             float t = elapsed / knockbackDuration;
-
             float eased = knockbackCurve.Evaluate(t);
 
             Vector3 pos = Vector3.Lerp(startPos, targetPos, eased);
-
             float height = Mathf.Sin(t * Mathf.PI) * verticalBump;
             pos.y = startPos.y + height;
 
@@ -173,6 +188,11 @@ public class EnemyHealth : MonoBehaviour
         }
 
         transform.position = targetPos;
+
+        attacks = GetComponents<IEnemyAttack>();
+        foreach (var atk in attacks)
+            atk.SetKnockedBack(false);
+
         inKnockback = false;
     }
 
@@ -189,15 +209,62 @@ public class EnemyHealth : MonoBehaviour
 
     private void Die()
     {
+
+        float deathSoundLength = 0f;
+        if (audioSource != null && deathSound != null)
+        {
+            audioSource.PlayOneShot(deathSound);
+            deathSoundLength = deathSound.length;
+        }
+
         if (healthBar != null)
             healthBar.gameObject.SetActive(false);
+
+        if (xpOrbPrefab != null && xpValue > 0)
+        {
+            int xpPerOrb = 5;
+            int totalXP = xpValue;
+
+            int numFullOrbs = totalXP / xpPerOrb;
+            int remainder = totalXP % xpPerOrb;
+
+            Vector3 basePos = transform.position + Vector3.up * 0.5f;
+
+            for (int i = 0; i < numFullOrbs; i++)
+            {
+                Vector3 spawnPos = GetOrbSpawnPosition(basePos);
+                GameObject orbObj = Instantiate(xpOrbPrefab, spawnPos, Quaternion.identity);
+
+                var orb = orbObj.GetComponent<XPOrb>();
+                if (orb != null)
+                    orb.xpAmount = xpPerOrb;
+            }
+
+            if (remainder > 0)
+            {
+                Vector3 spawnPos = GetOrbSpawnPosition(basePos);
+                GameObject orbObj = Instantiate(xpOrbPrefab, spawnPos, Quaternion.identity);
+
+                var orb = orbObj.GetComponent<XPOrb>();
+                if (orb != null)
+                    orb.xpAmount = remainder;
+            }
+        }
 
         StartCoroutine(DeathRoutine());
     }
 
+    private Vector3 GetOrbSpawnPosition(Vector3 basePos)
+    {
+        float angle = UnityEngine.Random.Range(0f, Mathf.PI * 2f);
+        float radius = UnityEngine.Random.Range(0f, 0.75f);
+        Vector3 offset = new Vector3(Mathf.Cos(angle), 0f, Mathf.Sin(angle)) * radius;
+        return basePos + offset;
+    }
+
     private IEnumerator DeathRoutine()
     {
-        float duration = 0.3f;         
+        float duration = 0.3f;
         float elapsed = 0f;
 
         Vector3 startScale = transform.localScale;

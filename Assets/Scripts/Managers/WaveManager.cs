@@ -1,16 +1,19 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 
-// Types of waves we support
 public enum WaveType
 {
     Normal,
     Break,
     MiniBoss,
     Power,
-    Boss
+    Boss,
+    FastDuck,
+    AllRanged,
+    PanicMix
 }
 
 [System.Serializable]
@@ -24,6 +27,8 @@ public class Wave
 
 public class WaveManager : MonoBehaviour
 {
+    public event Action<Wave, int> OnWaveStarted;
+
     [Header("Endless Wave Settings")]
     [Tooltip("Base enemy count for the very first combat wave.")]
     public int startingEnemyCount = 3;
@@ -44,6 +49,9 @@ public class WaveManager : MonoBehaviour
     [Tooltip("Every N waves, spawn a Break wave. Set <= 0 to disable.")]
     public int breakEvery = 5;
 
+    [Tooltip("Every N waves, spawn an All-Fast-Ducks wave. Set <= 0 to disable.")]
+    public int fastDuckEvery = 3;
+
     [Tooltip("Every N waves, spawn a Mini-Boss wave. Set <= 0 to disable.")]
     public int miniBossEvery = 7;
 
@@ -52,6 +60,12 @@ public class WaveManager : MonoBehaviour
 
     [Tooltip("Every N waves, spawn a Power wave (if not overridden by boss/miniboss/break). Set <= 0 to disable.")]
     public int powerEvery = 4;
+
+    [Tooltip("Every N waves, spawn an All-Ranged wave. Set <= 0 to disable.")]
+    public int allRangedEvery = 6;
+
+    [Tooltip("Every N waves, spawn a Panic mixed wave (all enemies spawn at once). Set <= 0 to disable.")]
+    public int panicMixEvery = 8;
 
     [Header("Timing")]
     public float timeBetweenWaves = 3f;
@@ -66,6 +80,7 @@ public class WaveManager : MonoBehaviour
     public int breakWaveHealAmount = 1;
 
     [SerializeField] private PlayerHealth playerHealth;
+    [SerializeField] private Transform playerTransform;
 
     [Header("Scaling vs Wave & Player")]
     [Tooltip("Extra enemy max health per wave (e.g. 0.15 = +15% per wave).")]
@@ -86,7 +101,74 @@ public class WaveManager : MonoBehaviour
     [Tooltip("Extra enemy move speed per player level above 1.")]
     public float speedPerLevel = 0.04f;
 
-    private int currentWaveNumber = 0;   
+    [Header("XP Scaling")]
+    [Tooltip("Extra enemy XP per wave (multiplier per wave).")]
+    public float xpPerWave = 0.20f;
+
+    [Tooltip("Extra enemy XP per player level above 1.")]
+    public float xpPerLevel = 0.10f;
+
+    [Header("Boss Waves")]
+    [Tooltip("Prefab that will be spawned for Boss waves.")]
+    public GameObject bossPrefab;
+
+    [Tooltip("Optional spawn points for bosses. If empty, uses the spawner's transform.")]
+    public Transform[] bossSpawnPoints;
+
+    [Header("Audio")]
+    public AudioSource audioSource;
+    public AudioClip waveStartSound;
+
+
+    [Header("Debug Sample Waves")]
+    [SerializeField] private bool enableSampleWaveHotkeys = false;
+
+    [SerializeField]
+    private Wave sampleNormalWave = new Wave
+    {
+        waveName = "Sample Normal",
+        waveType = WaveType.Normal,
+        enemyCount = 5,
+        spawnInterval = 0.5f
+    };
+
+    [SerializeField]
+    private Wave samplePowerWave = new Wave
+    {
+        waveName = "Sample Power",
+        waveType = WaveType.Power,
+        enemyCount = 3,
+        spawnInterval = 0.6f
+    };
+
+    [SerializeField]
+    private Wave sampleBreakWave = new Wave
+    {
+        waveName = "Sample Break",
+        waveType = WaveType.Break,
+        enemyCount = 0,
+        spawnInterval = 0f
+    };
+
+    [SerializeField]
+    private Wave sampleMiniBossWave = new Wave
+    {
+        waveName = "Sample MiniBoss",
+        waveType = WaveType.MiniBoss,
+        enemyCount = 1,
+        spawnInterval = 0f
+    };
+
+    [SerializeField]
+    private Wave sampleBossWave = new Wave
+    {
+        waveName = "Sample Boss",
+        waveType = WaveType.Boss,
+        enemyCount = 1,
+        spawnInterval = 0f
+    };
+
+    private int currentWaveNumber = 0;
     private int enemiesAlive = 0;
     private bool waveActive = false;
 
@@ -94,6 +176,7 @@ public class WaveManager : MonoBehaviour
     private float currentSpawnInterval;
 
     private Wave currentWave;
+    private bool isShuttingDown = false;
 
     private void Start()
     {
@@ -121,8 +204,98 @@ public class WaveManager : MonoBehaviour
             }
         }
 
+        if (playerTransform == null)
+        {
+            if (playerHealth != null) playerTransform = playerHealth.transform;
+            else
+            {
+                GameObject p = GameObject.FindGameObjectWithTag("Player");
+                if (p != null) playerTransform = p.transform;
+                else Debug.LogWarning("[WaveManager] No Player transform found. Boss attack targeting may break.");
+            }
+        }
+
+        if (bossEvery > 0 && bossPrefab == null)
+        {
+            Debug.LogWarning("[WaveManager] Boss waves are enabled but no bossPrefab is assigned.");
+        }
+
         currentBaseEnemyCount = startingEnemyCount;
         currentSpawnInterval = startingSpawnInterval;
+
+        StartCoroutine(StartNextWave());
+    }
+
+    private void Update()
+    {
+        if (!enableSampleWaveHotkeys || isShuttingDown)
+            return;
+
+        if (Input.GetKeyDown(KeyCode.Alpha1))
+            TriggerSampleWave(sampleNormalWave);
+
+        else if (Input.GetKeyDown(KeyCode.Alpha2))
+            TriggerSampleWave(samplePowerWave);
+
+        else if (Input.GetKeyDown(KeyCode.Alpha3))
+            TriggerSampleWave(sampleBreakWave);
+
+        else if (Input.GetKeyDown(KeyCode.Alpha4))
+            TriggerSampleWave(sampleMiniBossWave);
+
+        else if (Input.GetKeyDown(KeyCode.Alpha5))
+            TriggerSampleWave(sampleBossWave);
+    }
+
+    private void TriggerSampleWave(Wave wave)
+    {
+
+        if (audioSource != null && waveStartSound != null)
+        {
+            audioSource.PlayOneShot(waveStartSound);
+        }
+
+        Debug.Log($"[WaveManager] DEBUG: Triggering sample wave: {wave.waveName}");
+
+        StopAllCoroutines();
+        ClearAllEnemiesImmediate();
+
+        waveActive = false;
+        enemiesAlive = 0;
+
+        StartCoroutine(RunWave(wave, allowAutoChainToNext: false));
+    }
+
+    private void ClearAllEnemiesImmediate()
+    {
+        EnemyHealth[] allEnemies = FindObjectsOfType<EnemyHealth>();
+        foreach (var enemy in allEnemies)
+        {
+            enemy.OnEnemyDied -= HandleEnemyDied;
+            Destroy(enemy.gameObject);
+        }
+    }
+
+    private void JumpToWave(int waveNumber)
+    {
+        Debug.Log($"[WaveManager] DEBUG: Jumping to wave {waveNumber} via hotkey.");
+
+        StopAllCoroutines();
+
+        ClearAllEnemiesImmediate();
+
+        waveActive = false;
+        enemiesAlive = 0;
+
+        currentBaseEnemyCount = startingEnemyCount;
+        currentSpawnInterval = startingSpawnInterval;
+
+        for (int i = 1; i < waveNumber; i++)
+        {
+            GenerateWave(i);
+        }
+
+        currentWaveNumber = waveNumber - 1;
 
         StartCoroutine(StartNextWave());
     }
@@ -130,18 +303,20 @@ public class WaveManager : MonoBehaviour
     private IEnumerator StartNextWave()
     {
         currentWaveNumber++;
-
         currentWave = GenerateWave(currentWaveNumber);
+        OnWaveStarted?.Invoke(currentWave, currentWaveNumber);
+
+        if (audioSource != null && waveStartSound != null)
+            audioSource.PlayOneShot(waveStartSound);
 
         Debug.Log($"[WaveManager] Preparing {currentWave.waveName} (Wave {currentWaveNumber}, {currentWave.waveType})");
 
-        // BREAK WAVE: no enemies, just chill
         if (currentWave.waveType == WaveType.Break)
         {
             waveActive = false;
             enemiesAlive = 0;
 
-            Debug.Log("[WaveManager] Break wave � no enemies. Player can breathe.");
+            Debug.Log("[WaveManager] Break wave – no enemies. Player can breathe.");
 
             if (playerHealth != null && breakWaveHealAmount > 0)
             {
@@ -157,8 +332,6 @@ public class WaveManager : MonoBehaviour
             yield break;
         }
 
-
-        // COMBAT WAVES
         waveActive = true;
         enemiesAlive = 0;
 
@@ -166,38 +339,82 @@ public class WaveManager : MonoBehaviour
 
         for (int i = 0; i < currentWave.enemyCount; i++)
         {
-            GameObject enemy = spawner.SpawnEnemyFromWave();
-            if (enemy != null)
-            {
-                enemiesAlive++;
+            GameObject enemy = null;
 
-                ApplyWaveModifiersToEnemy(enemy, currentWave);
-
-                EnemyHealth health = enemy.GetComponent<EnemyHealth>();
-                if (health != null)
+                if (currentWave.waveType == WaveType.Boss && bossPrefab != null)
                 {
-                    health.OnEnemyDied += HandleEnemyDied;
+                    Transform spawnPoint = GetRandomBossSpawnPoint();
+                    enemy = Instantiate(bossPrefab, spawnPoint.position, spawnPoint.rotation);
+                    ConfigureBossRefs(enemy);
+                }
+                else
+                {
+                    switch (currentWave.waveType)
+                    {
+                        case WaveType.FastDuck:
+                            enemy = spawner.SpawnFastDuck();
+                            break;
+
+                        case WaveType.AllRanged:
+                            enemy = spawner.SpawnRangedDuck();
+                            break;
+
+                        case WaveType.Normal:
+                            enemy = spawner.SpawnBasicDuck();
+                            break;
+
+                        default:
+                            enemy = spawner.SpawnEnemyFromWave();
+                            break;
+                    }
+                }
+
+                if (enemy != null)
+                {
+                    enemiesAlive++;
+
+                bool isPrimaryMiniBoss = (currentWave.waveType == WaveType.MiniBoss && i == 0);
+                    ApplyWaveModifiersToEnemy(enemy, currentWave, isPrimaryMiniBoss);
+
+                    EnemyHealth health = enemy.GetComponent<EnemyHealth>();
+                    if (health != null)
+                {
+                        health.OnEnemyDied += HandleEnemyDied;
                 }
             }
 
+            if (currentWave.waveType != WaveType.PanicMix)
+            {
             yield return new WaitForSeconds(currentWave.spawnInterval);
+        }
         }
 
         Debug.Log("[WaveManager] Finished spawning for this wave.");
     }
 
-    // ------------------------------------------------------------------
-    // Procedural wave generator
-    // ------------------------------------------------------------------
+
+    private Transform GetRandomBossSpawnPoint()
+    {
+        if (bossSpawnPoints != null && bossSpawnPoints.Length > 0)
+        {
+            int index = UnityEngine.Random.Range(0, bossSpawnPoints.Length);
+            return bossSpawnPoints[index];
+        }
+
+        return spawner.transform;
+    }
+
     private Wave GenerateWave(int waveNumber)
     {
         Wave wave = new Wave();
 
-        // figure out type based on cadence (Boss > MiniBoss > Break > Power > Normal)
         bool isBoss = bossEvery > 0 && waveNumber % bossEvery == 0;
         bool isMiniBoss = miniBossEvery > 0 && waveNumber % miniBossEvery == 0;
         bool isBreak = breakEvery > 0 && waveNumber % breakEvery == 0;
         bool isPower = powerEvery > 0 && waveNumber % powerEvery == 0;
+        bool isFastDuck = fastDuckEvery > 0 && waveNumber % fastDuckEvery == 0;
+        bool isAllRanged = allRangedEvery > 0 && waveNumber % allRangedEvery == 0;
+        bool isPanicMix = panicMixEvery > 0 && waveNumber % panicMixEvery == 0;
 
         if (isBoss)
         {
@@ -211,16 +428,29 @@ public class WaveManager : MonoBehaviour
         {
             wave.waveType = WaveType.Break;
         }
-        else if (isPower)
-        {
-            wave.waveType = WaveType.Power;
-        }
         else
         {
-            wave.waveType = WaveType.Normal;
+
+            List<WaveType> candidates = new List<WaveType>();
+
+            candidates.Add(WaveType.Normal);
+
+            if (isPower)
+                candidates.Add(WaveType.Power);
+
+            if (isFastDuck)
+                candidates.Add(WaveType.FastDuck);
+
+            if (isAllRanged)
+                candidates.Add(WaveType.AllRanged);
+
+            if (isPanicMix)
+                candidates.Add(WaveType.PanicMix);
+
+            int index = UnityEngine.Random.Range(0, candidates.Count);
+            wave.waveType = candidates[index];
         }
 
-        // Now define enemyCount + spawnInterval based on type
         switch (wave.waveType)
         {
             case WaveType.Break:
@@ -230,9 +460,10 @@ public class WaveManager : MonoBehaviour
                 break;
 
             case WaveType.MiniBoss:
-                wave.waveName = $"Mini-Boss {waveNumber}";
-                wave.enemyCount = 1;
-                wave.spawnInterval = 0.1f;
+                wave.waveName = $"Mini-Boss + Ranged {waveNumber}";
+                int miniTotal = Mathf.Max(4, currentBaseEnemyCount / 2);
+                wave.enemyCount = miniTotal;
+                wave.spawnInterval = Mathf.Max(minSpawnInterval, currentSpawnInterval);
                 break;
 
             case WaveType.Boss:
@@ -242,29 +473,60 @@ public class WaveManager : MonoBehaviour
                 break;
 
             case WaveType.Power:
-                wave.waveName = "Power Wave";
-                // Lots of weaker enemies to shred
-                int powerCount = Mathf.RoundToInt(currentBaseEnemyCount * 1.6f);
+                wave.waveName = "Mixed Wave";
+                int powerBase = Mathf.RoundToInt(currentBaseEnemyCount * 1.6f);
+                int powerVar = Mathf.RoundToInt(powerBase * 0.25f);
+                int powerCount = powerBase + UnityEngine.Random.Range(-powerVar, powerVar + 1);
                 wave.enemyCount = Mathf.Max(8, powerCount);
-                wave.spawnInterval = Mathf.Max(minSpawnInterval, currentSpawnInterval * 0.6f);
+
+                float powerInterval = currentSpawnInterval * UnityEngine.Random.Range(0.55f, 0.75f);
+                wave.spawnInterval = Mathf.Max(minSpawnInterval, powerInterval);
+                break;
+
+            case WaveType.FastDuck:
+                wave.waveName = "Fast Duck Swarm";
+                int fastBase = Mathf.RoundToInt(currentBaseEnemyCount * 1.2f);
+                int fastVar = Mathf.RoundToInt(fastBase * 0.25f);
+                int fastCount = fastBase + UnityEngine.Random.Range(-fastVar, fastVar + 1);
+                wave.enemyCount = Mathf.Max(6, fastCount);
+
+                float fastInterval = currentSpawnInterval * UnityEngine.Random.Range(0.6f, 0.8f);
+                wave.spawnInterval = Mathf.Max(minSpawnInterval, fastInterval);
+                break;
+
+            case WaveType.AllRanged:
+                wave.waveName = "Sniper Ducks";
+                int rangedBase = Mathf.RoundToInt(currentBaseEnemyCount * 1.1f);
+                int rangedVar = Mathf.RoundToInt(rangedBase * 0.25f);
+                int rangedCount = rangedBase + UnityEngine.Random.Range(-rangedVar, rangedVar + 1);
+                wave.enemyCount = Mathf.Max(4, rangedCount);
+
+                float rangedInterval = currentSpawnInterval * UnityEngine.Random.Range(0.8f, 1.0f);
+                wave.spawnInterval = Mathf.Max(minSpawnInterval, rangedInterval);
+                break;
+
+            case WaveType.PanicMix:
+                wave.waveName = "Duck Ambush";
+                int panicBase = Mathf.RoundToInt(currentBaseEnemyCount * 1.3f);
+                int panicVar = Mathf.RoundToInt(panicBase * 0.3f);
+                int panicCount = panicBase + UnityEngine.Random.Range(-panicVar, panicVar + 1);
+                wave.enemyCount = Mathf.Max(6, panicCount);
+
+                wave.spawnInterval = minSpawnInterval;
                 break;
 
             case WaveType.Normal:
             default:
                 wave.waveName = $"Wave {waveNumber}";
-
-                // A bit of randomness around the base count
                 int variation = Mathf.RoundToInt(currentBaseEnemyCount * 0.25f);
-                int randomOffset = Random.Range(-variation, variation + 1);
+                int randomOffset = UnityEngine.Random.Range(-variation, variation + 1);
                 int normalCount = currentBaseEnemyCount + randomOffset;
-
                 wave.enemyCount = Mathf.Max(2, normalCount);
                 wave.spawnInterval = Mathf.Max(minSpawnInterval, currentSpawnInterval);
                 break;
         }
 
-        // After defining this wave, update base count & spawn interval for the NEXT one
-        if (wave.waveType != WaveType.Break) // breaks don't grow the curve
+        if (wave.waveType != WaveType.Break)
         {
             currentBaseEnemyCount = Mathf.RoundToInt(currentBaseEnemyCount * enemyCountGrowth);
             currentSpawnInterval = Mathf.Max(minSpawnInterval, currentSpawnInterval * spawnIntervalDecay);
@@ -273,10 +535,7 @@ public class WaveManager : MonoBehaviour
         return wave;
     }
 
-    // ------------------------------------------------------------------
-    // Scaling enemies per wave + player level
-    // ------------------------------------------------------------------
-    private void ApplyWaveModifiersToEnemy(GameObject enemy, Wave wave)
+    private void ApplyWaveModifiersToEnemy(GameObject enemy, Wave wave, bool isPrimaryInWave = false)
     {
         EnemyHealth health = enemy.GetComponent<EnemyHealth>();
         EnemyAttack attack = enemy.GetComponent<EnemyAttack>();
@@ -286,7 +545,6 @@ public class WaveManager : MonoBehaviour
         int playerLevel = (playerXP != null) ? Mathf.Max(1, playerXP.level) : 1;
         int levelsAboveOne = Mathf.Max(0, playerLevel - 1);
 
-        // Base multipliers
         float healthMult = 1f
             + (currentWaveNumber - 1) * healthPerWave
             + levelsAboveOne * healthPerLevel;
@@ -299,36 +557,51 @@ public class WaveManager : MonoBehaviour
             + (currentWaveNumber - 1) * speedPerWave
             + levelsAboveOne * speedPerLevel;
 
-        // Adjust based on wave type
+        float xpMult = 1f
+            + (currentWaveNumber - 1) * xpPerWave
+            + levelsAboveOne * xpPerLevel;
+
         switch (wave.waveType)
         {
             case WaveType.Power:
-                // Let the player feel busted
                 healthMult *= 0.5f;
                 damageMult *= 0.8f;
                 speedMult *= 0.9f;
+                xpMult *= 1.2f;
                 break;
 
             case WaveType.MiniBoss:
-                healthMult *= 3f;
-                damageMult *= 1.8f;
-                speedMult *= 0.9f;
-                enemy.transform.localScale *= 1.5f;
+                if (isPrimaryInWave)
+                {
+                    healthMult *= 3f;
+                    damageMult *= 1.8f;
+                    speedMult *= 0.9f;
+                    xpMult *= 4f;
+                    enemy.transform.localScale *= 1.5f;
+                }
+                else
+                {
+                    healthMult *= 1.2f;
+                    damageMult *= 1.2f;
+                    xpMult *= 1.5f;
+                }
                 break;
 
             case WaveType.Boss:
                 healthMult *= 5f;
                 damageMult *= 2.2f;
                 speedMult *= 1.0f;
+                xpMult *= 8f;
                 enemy.transform.localScale *= 2f;
                 break;
         }
 
-        // Apply to components
         if (health != null)
         {
             health.maxHealth = Mathf.Max(1, Mathf.RoundToInt(health.maxHealth * healthMult));
-            // EnemyHealth.Start() will copy maxHealth into currentHealth on spawn.
+
+            int baseXP = Mathf.Max(1, health.xpValue);
+            health.xpValue = Mathf.Max(1, Mathf.RoundToInt(baseXP * xpMult));
         }
 
         if (attack != null)
@@ -343,28 +616,47 @@ public class WaveManager : MonoBehaviour
         }
     }
 
-    // ------------------------------------------------------------------
-    // Enemy lifecycle & wave completion
-    // ------------------------------------------------------------------
+    private void ConfigureBossRefs(GameObject enemy)
+    {
+        if (enemy == null) return;
+
+        var bossAttack = enemy.GetComponent<SpEnemy1Attack>();
+        if (bossAttack == null) return;
+
+        bossAttack.InitializeTarget(playerTransform, playerHealth);
+
+        if (bossAttack.audioSource == null)
+            bossAttack.audioSource = enemy.GetComponent<AudioSource>();
+    }
+
     private void HandleEnemyDied(EnemyHealth health)
     {
-        health.OnEnemyDied -= HandleEnemyDied;
+        if (isShuttingDown || !this || !isActiveAndEnabled)
+            return;
+
+        if (health != null)
+        {
+            health.OnEnemyDied -= HandleEnemyDied;
+        }
+
         enemiesAlive--;
 
-        // Count this enemy as defeated
         if (RunStats.Instance != null)
         {
             RunStats.Instance.RegisterEnemyDefeated();
         }
 
-        if (waveActive && enemiesAlive <= 0)
-        {
-            EndWave();
-        }
+        if (!waveActive || enemiesAlive > 0)
+            return;
+
+        EndWave();
     }
 
     private void EndWave()
     {
+        if (isShuttingDown || !this || !isActiveAndEnabled)
+            return;
+
         waveActive = false;
         Debug.Log($"[WaveManager] {currentWave.waveName} (Wave {currentWaveNumber}) complete! All enemies dead.");
 
@@ -380,5 +672,101 @@ public class WaveManager : MonoBehaviour
     {
         yield return new WaitForSeconds(timeBetweenWaves);
         StartCoroutine(StartNextWave());
+    }
+
+    private void OnDisable()
+    {
+        isShuttingDown = true;
+    }
+
+    private void OnDestroy()
+    {
+        isShuttingDown = true;
+    }
+
+    private IEnumerator RunWave(Wave wave, bool allowAutoChainToNext)
+    {
+        currentWave = wave;
+
+        OnWaveStarted?.Invoke(currentWave, currentWaveNumber);
+
+        Debug.Log($"[WaveManager] DEBUG SAMPLE — Running: {wave.waveName} ({wave.waveType})");
+
+        if (wave.waveType == WaveType.Break)
+        {
+            waveActive = false;
+            enemiesAlive = 0;
+
+            if (playerHealth != null && breakWaveHealAmount > 0)
+            {
+                playerHealth.Heal(breakWaveHealAmount);
+            }
+
+            yield return new WaitForSeconds(breakWaveDuration);
+
+            if (allowAutoChainToNext)
+            {
+                StartCoroutine(StartNextWave());
+            }
+
+            yield break;
+        }
+
+        waveActive = true;
+        enemiesAlive = 0;
+
+        for (int i = 0; i < wave.enemyCount; i++)
+        {
+            GameObject enemy = null;
+
+            if (wave.waveType == WaveType.Boss && bossPrefab != null)
+            {
+                Transform spawnPoint = GetRandomBossSpawnPoint();
+                enemy = Instantiate(bossPrefab, spawnPoint.position, spawnPoint.rotation);
+                ConfigureBossRefs(enemy);
+            }
+            else
+            {
+                switch (wave.waveType)
+                {
+                    case WaveType.FastDuck:
+                        enemy = spawner.SpawnFastDuck();
+                        break;
+
+                    case WaveType.AllRanged:
+                        enemy = spawner.SpawnRangedDuck();
+                        break;
+
+                    case WaveType.Normal:
+                        enemy = spawner.SpawnBasicDuck();
+                        break;
+
+                    default:
+                        enemy = spawner.SpawnEnemyFromWave();
+                        break;
+                }
+            }
+
+            if (enemy != null)
+            {
+                enemiesAlive++;
+
+                bool isPrimaryMiniBoss = (wave.waveType == WaveType.MiniBoss && i == 0);
+                ApplyWaveModifiersToEnemy(enemy, wave, isPrimaryMiniBoss);
+
+                EnemyHealth health = enemy.GetComponent<EnemyHealth>();
+                if (health != null)
+                {
+                    health.OnEnemyDied += HandleEnemyDied;
+                }
+            }
+
+            if (wave.waveType != WaveType.PanicMix)
+            {
+                yield return new WaitForSeconds(wave.spawnInterval);
+            }
+        }
+
+        Debug.Log("[WaveManager] DEBUG SAMPLE — Finished spawning.");
     }
 }

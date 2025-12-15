@@ -26,6 +26,16 @@ public class CameraFollow : MonoBehaviour
     public LayerMask collisionLayers;
     public float minDistanceAboveFloor = 0.5f;
 
+    [Header("Scale / Size Settings")]
+    public Transform scaleSource;         
+    public float zoomPerScale = 1.0f;     
+    public float heightPerScale = 1.0f;   
+
+    private float baseMinZoom;
+    private float baseMaxZoom;
+    private float baseTargetHeight = 1.5f;
+    private float baseMinDistanceAboveFloor;
+
     private float rotationX = 0f;
     private float rotationY = 0f;
     private Vector3 currentVelocity;
@@ -45,6 +55,10 @@ public class CameraFollow : MonoBehaviour
 
         playerLayerMask = 1 << objectToFollow.gameObject.layer;
         collisionLayers &= ~playerLayerMask;
+
+        baseMinZoom = minZoomDistance;
+        baseMaxZoom = maxZoomDistance;
+        baseMinDistanceAboveFloor = minDistanceAboveFloor;
     }
 
     void LateUpdate()
@@ -84,19 +98,28 @@ public class CameraFollow : MonoBehaviour
 
     void UpdateCameraPosition()
     {
+        if (scaleSource == null)
+            scaleSource = objectToFollow;
+
+        float scaleFactor = scaleSource != null ? scaleSource.localScale.x : 1f;
+        scaleFactor = Mathf.Max(1f, scaleFactor);
+
+        float dynamicMinZoom = baseMinZoom * scaleFactor * zoomPerScale;
+        float dynamicMaxZoom = baseMaxZoom * scaleFactor * zoomPerScale;
+
+        currentZoom = Mathf.Clamp(currentZoom, dynamicMinZoom, dynamicMaxZoom);
+
         Quaternion rotation = Quaternion.Euler(rotationX, rotationY, 0f);
         Vector3 zoomedOffset = offset.normalized * currentZoom;
         Vector3 desiredPosition = objectToFollow.position + rotation * zoomedOffset;
 
-        // Prevent going below floor
         if (Physics.Raycast(desiredPosition, Vector3.down, out RaycastHit hit, Mathf.Infinity, collisionLayers))
         {
-            float minY = objectToFollow.position.y + minDistanceAboveFloor;
+            float minY = objectToFollow.position.y + baseMinDistanceAboveFloor * scaleFactor;
             if (desiredPosition.y < minY)
                 desiredPosition.y = minY;
         }
 
-        // Wall collision
         Vector3 direction = desiredPosition - objectToFollow.position;
         if (Physics.Raycast(objectToFollow.position, direction.normalized, out hit, direction.magnitude, collisionLayers))
         {
@@ -105,6 +128,8 @@ public class CameraFollow : MonoBehaviour
 
         transform.position = desiredPosition;
 
-        transform.LookAt(objectToFollow.position + Vector3.up * 1.5f);
+        float targetHeight = baseTargetHeight + (scaleFactor - 1f) * heightPerScale;
+        transform.LookAt(objectToFollow.position + Vector3.up * targetHeight);
     }
+
 }

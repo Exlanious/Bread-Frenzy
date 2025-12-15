@@ -1,5 +1,6 @@
 using UnityEngine;
 using System;
+using System.Collections;
 
 public class PlayerHealth : MonoBehaviour
 {
@@ -17,15 +18,38 @@ public class PlayerHealth : MonoBehaviour
     public bool debugLogs = false;
 
     [Header("Damage Timing")]
-    public float invincibilityDuration = 0.5f;   
+    public float invincibilityDuration = 0.5f;
     private float lastDamageTime = -999f;
 
+    [Header("Feedback")]
+    public Renderer playerRenderer;
+    public Color hurtFlashColor = Color.red;
+    public float flashSpeed = 20f;
+    public float hitstopDuration = 0.05f;
+    [Header("Invincibility Visuals")]
+    public float hurtFlashDuration = 0.15f;
+    [Range(0f, 1f)]
+    public float iframeAlpha = 0.4f;
+
+    [Header("Effects")]
+    public ParticleSystem healEffect;
+
+
+    private bool flashing = false;
+    private bool inHitstop = false;
 
     public event Action OnPlayerDied;
     public event Action<int, int> OnHealthChanged;
 
     private void Start()
     {
+        if (playerRenderer == null)
+        {
+            playerRenderer = GetComponentInChildren<Renderer>();
+            if (playerRenderer == null && debugLogs)
+                Debug.LogWarning("[PlayerHealth] No Renderer found on player or children.");
+        }
+
         ResetHealth();
     }
 
@@ -36,7 +60,12 @@ public class PlayerHealth : MonoBehaviour
 
         lastDamageTime = Time.time;
 
-        // Track damage taken for this run
+        if (!flashing)
+            StartCoroutine(FlashRoutine());
+
+        if (!inHitstop)
+            StartCoroutine(HitstopRoutine());
+
         if (RunStats.Instance != null && amount > 0)
         {
             RunStats.Instance.RegisterDamageTaken(amount);
@@ -58,6 +87,58 @@ public class PlayerHealth : MonoBehaviour
         UpdateHealthBar();
     }
 
+    private IEnumerator FlashRoutine()
+    {
+        if (playerRenderer == null || playerRenderer.material == null)
+        {
+            if (debugLogs)
+                Debug.LogWarning("[PlayerHealth] FlashRoutine aborted: playerRenderer or material is null.");
+            yield break;
+        }
+
+        flashing = true;
+
+        Color originalColor = playerRenderer.material.color;
+
+        Color transparentColor = originalColor;
+        transparentColor.a = iframeAlpha;
+
+        float flashEndTime = Time.time + hurtFlashDuration;
+
+        while (Time.time < flashEndTime)
+        {
+            float t = Mathf.Sin(Time.time * flashSpeed) * 0.5f + 0.5f;
+            Color flashColor = Color.Lerp(originalColor, hurtFlashColor, t);
+            playerRenderer.material.color = flashColor;
+
+            yield return null;
+        }
+
+        playerRenderer.material.color = transparentColor;
+
+        while (Time.time - lastDamageTime < invincibilityDuration)
+        {
+            playerRenderer.material.color = transparentColor;
+            yield return null;
+        }
+
+        playerRenderer.material.color = originalColor;
+        flashing = false;
+    }
+
+
+    private IEnumerator HitstopRoutine()
+    {
+        inHitstop = true;
+
+        PauseManager.SetPaused(PauseSource.Hitstop, true);
+
+        yield return new WaitForSecondsRealtime(hitstopDuration);
+
+        PauseManager.SetPaused(PauseSource.Hitstop, false);
+        inHitstop = false;
+    }
+
     private void Die()
     {
         if (debugLogs)
@@ -66,9 +147,6 @@ public class PlayerHealth : MonoBehaviour
         OnPlayerDied?.Invoke();
     }
 
-    // ---------------------------------------------------------------
-    // HEALTH CONTROL
-    // ---------------------------------------------------------------
     public void ResetHealth()
     {
         currentHealth = maxHealth;
@@ -81,11 +159,13 @@ public class PlayerHealth : MonoBehaviour
         currentHealth = Mathf.Min(currentHealth + amount, maxHealth);
         OnHealthChanged?.Invoke(currentHealth, maxHealth);
         UpdateHealthBar();
+
+        if (healEffect != null)
+        {
+            healEffect.Play();
+        }
     }
 
-    // ---------------------------------------------------------------
-    // UI UPDATE
-    // ---------------------------------------------------------------
     private void UpdateHealthBar()
     {
         if (healthBar == null) return;

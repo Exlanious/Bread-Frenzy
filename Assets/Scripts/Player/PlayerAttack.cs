@@ -8,23 +8,40 @@ public class PlayerAttack : MonoBehaviour
     public KeyCode attackKey = KeyCode.Mouse0;
     public float attackDuration = 0.15f;
     public float attackCooldown = 0.25f;
-    public float knockbackForce = 8f; 
-    public float upwardBias = 0.4f;    
+    public float knockbackForce = 8f;
+    public float upwardBias = 0.4f;
 
     [Header("References (assign in inspector)")]
-    public Collider attackCollider;               
-    public CollisionBroadcaster hitboxBroadcaster; 
+    public Collider attackCollider;
+    public CollisionBroadcaster hitboxBroadcaster;
     [Tooltip("Optional visual mesh to flash when attacking.")]
     public MeshRenderer attackRenderer;
 
     [Header("Hit Filter")]
-    public LayerMask hittableLayers = ~0; 
+    public LayerMask hittableLayers = ~0;
 
     [Header("Stats")]
     public PlayerStats playerStats;
     [Header("Slash Prefab")]
     public GameObject slashPrefab;
     public float slashSpawnDistance = 1.5f;
+    [Header("Projectile Settings")]
+    public GameObject projectilePrefab;
+    public float projectileSpeed = 15f;
+    public float projectileLifetime = 3f;
+    public float projectileSpreadAngle = 10f;
+
+    [Header("VFX")]
+    public ParticleSystem hitEffect;
+
+    [Header("Audio")]
+    public AudioSource audioSource;
+    [Header("Weapon Visuals")]
+    public GameObject heldBaguette;
+
+    public AudioClip swordSwingSound;
+    public AudioClip projectileShootSound;
+    public AudioClip hitSound;
 
 
     // Internal state
@@ -77,17 +94,62 @@ public class PlayerAttack : MonoBehaviour
         canAttack = false;
         isAttacking = true;
 
+        if (heldBaguette != null)
+            heldBaguette.SetActive(false);
+
         Vector3 spawnPos = transform.position + Vector3.up * 0.1f;
         Quaternion spawnRot = Quaternion.LookRotation(transform.forward, Vector3.up);
 
         GameObject slashInstance = Instantiate(slashPrefab, spawnPos, spawnRot);
         slashInstance.transform.SetParent(transform, true);
 
+        if (audioSource != null && swordSwingSound != null)
+        {
+            audioSource.PlayOneShot(swordSwingSound);
+        }
+
         float radiusMult = 1f;
         if (playerStats != null)
             radiusMult = playerStats.radius;
 
         slashInstance.transform.localScale *= radiusMult;
+
+        if (playerStats != null && playerStats.hasProjectile && projectilePrefab != null)
+        {
+            int count = Mathf.Max(1, playerStats.projectileCount);
+
+            for (int i = 0; i < count; i++)
+            {
+                float spread = projectileSpreadAngle;
+                float t = (count == 1) ? 0f : (i / (float)(count - 1) - 0.5f);
+                float angleOffset = t * spread;
+
+                Quaternion projRot = Quaternion.AngleAxis(angleOffset, Vector3.up) * spawnRot;
+
+                GameObject projObj = Instantiate(projectilePrefab, spawnPos, projRot);
+
+                Projectile proj = projObj.GetComponent<Projectile>();
+                if (proj != null)
+                {
+                    int dmg = 1;
+                    if (playerStats != null)
+                        dmg = Mathf.Max(1, Mathf.RoundToInt(playerStats.damage));
+
+                    proj.Initialize(
+                        owner: transform,
+                        damage: dmg,
+                        speed: projectileSpeed,
+                        lifetime: projectileLifetime,
+                        hittableLayers: hittableLayers
+                    );
+                }
+
+                if (audioSource != null && projectileShootSound != null)
+                {
+                    audioSource.PlayOneShot(projectileShootSound);
+                }
+            }
+        }
 
         CollisionBroadcaster broadcaster = slashInstance.GetComponent<CollisionBroadcaster>();
         if (broadcaster != null)
@@ -105,9 +167,12 @@ public class PlayerAttack : MonoBehaviour
         }
 
         yield return new WaitForSeconds(attackCooldown);
+
+        if (heldBaguette != null)
+            heldBaguette.SetActive(true);
+
         canAttack = true;
     }
-
 
     private void OnHitboxTriggerEnter(Collider other)
     {
@@ -127,7 +192,22 @@ public class PlayerAttack : MonoBehaviour
             if (playerStats != null)
                 dmg = Mathf.Max(1, Mathf.RoundToInt(playerStats.damage));
 
-            enemyHealth.TakeDamage(dmg, dir); 
+            float kb = playerStats.knockback;
+            enemyHealth.TakeDamage(dmg, dir * kb);
+
+            if (hitEffect != null)
+            {
+                hitEffect.transform.position = other.ClosestPoint(transform.position);
+                hitEffect.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+                hitEffect.Play();
+            }
+
+            // Play hit sound
+            if (audioSource != null && hitSound != null)
+            {
+                audioSource.PlayOneShot(hitSound);
+            }
+
         }
     }
 
@@ -170,4 +250,5 @@ public class PlayerAttack : MonoBehaviour
             attackCollider.transform.localScale = baseColliderScale * radiusMult;
         }
     }
+
 }
