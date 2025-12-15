@@ -112,7 +112,7 @@ public class EnemyHealth : MonoBehaviour
 
     private IEnumerator HitReactionRoutine(Vector3 hitDirection)
     {
-        if (enableHitStun && agent != null)
+        if (enableHitStun && agent != null && agent.isActiveAndEnabled == true)
         {
             agent.isStopped = true;
             agent.velocity = Vector3.zero;
@@ -125,6 +125,11 @@ public class EnemyHealth : MonoBehaviour
             yield return StartCoroutine(KnockbackRoutine(hitDirection));
         else
             yield return new WaitForSeconds(hitStunTime);
+
+
+        // Wait until the enemy is on the ground before resuming movement
+        if (agent != null && !agent.isOnNavMesh)
+            yield return new WaitUntil(() => agent.isOnNavMesh);
 
         if (enableHitStun && agent != null && currentHealth > 0)
             agent.isStopped = false;
