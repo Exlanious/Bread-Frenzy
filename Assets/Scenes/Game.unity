@@ -5048,6 +5048,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Canvas
       objectReference: {fileID: 0}
+    - target: {fileID: 2607624522226168908, guid: 5e33cea71c4887f4195755754d5b5a79, type: 3}
+      propertyPath: m_SizeDelta.y
+      value: 40
+      objectReference: {fileID: 0}
     - target: {fileID: 2891702597956778796, guid: 5e33cea71c4887f4195755754d5b5a79, type: 3}
       propertyPath: m_Pivot.x
       value: 0
@@ -5140,6 +5144,22 @@ PrefabInstance:
       propertyPath: waveManager
       value: 
       objectReference: {fileID: 124158694}
+    - target: {fileID: 7141113895804094297, guid: 5e33cea71c4887f4195755754d5b5a79, type: 3}
+      propertyPath: m_fontSize
+      value: 42
+      objectReference: {fileID: 0}
+    - target: {fileID: 7141113895804094297, guid: 5e33cea71c4887f4195755754d5b5a79, type: 3}
+      propertyPath: m_margin.y
+      value: -35.93907
+      objectReference: {fileID: 0}
+    - target: {fileID: 7141113895804094297, guid: 5e33cea71c4887f4195755754d5b5a79, type: 3}
+      propertyPath: m_margin.z
+      value: -79.04562
+      objectReference: {fileID: 0}
+    - target: {fileID: 7141113895804094297, guid: 5e33cea71c4887f4195755754d5b5a79, type: 3}
+      propertyPath: m_fontSizeBase
+      value: 42
+      objectReference: {fileID: 0}
     - target: {fileID: 7165634708913601215, guid: 5e33cea71c4887f4195755754d5b5a79, type: 3}
       propertyPath: abilityManager
       value: 
@@ -5148,6 +5168,10 @@ PrefabInstance:
       propertyPath: abilitySelector
       value: 
       objectReference: {fileID: 371086996}
+    - target: {fileID: 7928388555644430667, guid: 5e33cea71c4887f4195755754d5b5a79, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: 36
+      objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 6010026991435764319, guid: 5e33cea71c4887f4195755754d5b5a79, type: 3}
     m_RemovedGameObjects: []
