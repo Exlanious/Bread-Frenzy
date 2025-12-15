@@ -340,7 +340,9 @@ public class WaveManager : MonoBehaviour
         for (int i = 0; i < currentWave.enemyCount; i++)
         {
             GameObject enemy = null;
-
+            while (spawner != null && !spawner.CanSpawn())
+                yield return new WaitForSeconds(0.1f);
+                
                 if (currentWave.waveType == WaveType.Boss && bossPrefab != null)
                 {
                     Transform spawnPoint = GetRandomBossSpawnPoint();
@@ -390,6 +392,13 @@ public class WaveManager : MonoBehaviour
         }
 
         Debug.Log("[WaveManager] Finished spawning for this wave.");
+
+        if (enemiesAlive <= 0)
+        {
+            Debug.LogWarning("[WaveManager] No enemies spawned this wave (likely hit spawn cap). Ending wave to prevent softlock.");
+            EndWave();
+        }
+
     }
 
 
@@ -640,6 +649,7 @@ public class WaveManager : MonoBehaviour
         }
 
         enemiesAlive--;
+        if (spawner != null) spawner.NotifyEnemyDied();
 
         if (RunStats.Instance != null)
         {
